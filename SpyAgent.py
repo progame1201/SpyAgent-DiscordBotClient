@@ -6,7 +6,7 @@ import winsound
 import discord
 import threading
 
-print("SpyAgent 1.1.0, progame1201")
+print("SpyAgent 1.1.1, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
@@ -50,7 +50,15 @@ async def on_ready():
 
     channel = client.get_channel(channel_id)
     if channel:
+        messages = []
+
         async for message in channel.history(limit=30, oldest_first=False):
+            messages.append(message)
+
+        # Развернуть список с сообщениями
+        messages.reverse()
+
+        for message in messages:
             date = message.created_at
             rounded_date = date.replace(second=0, microsecond=0)
             rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
