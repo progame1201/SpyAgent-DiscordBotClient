@@ -6,17 +6,18 @@ import winsound
 import discord
 import threading
 
-print("SpyAgent 1.1.1, progame1201")
+print("SpyAgent 1.3.0, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 guild_assigned = False
+save_attachments = input("save attachments true? [y/n] ").lower()
 notification = input("notification true? [y/n] ").lower()
 Сopyingmessages = input("Сopying messages true? [y/n] ").lower()
 guildid = 0
 channel_id = 0
-
+mutelist = []
 
 @client.event
 async def on_ready():
@@ -88,19 +89,32 @@ async def save_channel_messages(channel):
 
 async def receive_messages(channel):
     while True:
+        attachment_list = []
         message = await client.wait_for('message')
-
-        date = message.created_at
-
-        rounded_date = date.replace(second=0, microsecond=0)
-
-        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
-
-        print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
+        if message.channel.name in mutelist:
+            continue
+        if message.attachments:
+          if save_attachments == "y":
+            for attachment in message.attachments:
+                attachment_list.append(attachment.filename)
+                await attachment.save(attachment.filename)
+          else:
+              for attachment in message.attachments:
+                  attachment_list.append(attachment.url)
+          date = message.created_at
+          rounded_date = date.replace(second=0, microsecond=0)
+          rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+          print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
+        else:
+          date = message.created_at
+          rounded_date = date.replace(second=0, microsecond=0)
+          rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+          print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
 
         if notification == "y":
-            winsound.Beep(500, 100)
-            winsound.Beep(1000, 100)
+            if str(message.author.name) != str(client.user.name):
+              winsound.Beep(500, 100)
+              winsound.Beep(1000, 100)
 
 
 def send_messages():
@@ -109,7 +123,7 @@ def send_messages():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     while True:
-        user_input = loop.run_until_complete(async_input(f'Enter a message to send to {guild.name}: '))
+        user_input = loop.run_until_complete(async_input(f'Enter a message to send to {guild.name}: {channel.name}: '))
         if user_input == "***Reset":
             print("server names:")
             for i, guild in enumerate(client.guilds):
@@ -127,6 +141,31 @@ def send_messages():
             except:
                 channel_id = 0
             channel = client.get_channel(int(channel_id))
+            print(f'Channel selected: {channel.name}')
+            continue
+
+        if user_input == "***Mute":
+            channellistformute = []
+            for i, channel in enumerate(guild.text_channels):
+                channellistformute.append(channel.name)
+                print(f"{i}: {channel.name}")
+            mutechanelname = input("type chanel index: ")
+            try:
+              mutelist.append(channellistformute[int(mutechanelname)])
+            except:
+               print("index not found")
+            continue
+
+        if user_input == "***Unmute":
+            channellistforunmute = []
+            for i in range(len(mutelist)):
+                channellistforunmute.append(mutelist[i])
+                print(f"{i}: {mutelist[i]}")
+            unmutechanelname = input("type chanel index: ")
+            try:
+              mutelist.remove(channellistforunmute[int(unmutechanelname)])
+            except:
+              print("index not found")
             continue
         asyncio.run_coroutine_threadsafe(channel.send(user_input), client.loop)
 
