@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import time
 from datetime import datetime
 
 import winsound
 import discord
 import threading
 
-print("SpyAgent 1.3.0, progame1201")
+print("SpyAgent 1.5.0, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
@@ -15,20 +16,22 @@ guild_assigned = False
 save_attachments = input("save attachments true? [y/n] ").lower()
 notification = input("notification true? [y/n] ").lower()
 Сopyingmessages = input("Сopying messages true? [y/n] ").lower()
+DmMode = input("DM mode true? [y/n] ")
 guildid = 0
 channel_id = 0
 mutelist = []
-
+givehistory = 0
 @client.event
 async def on_ready():
-    global client
-    global guild
-    global Сopyingmessages
-    global channel
-    global guild_assigned
-    global guildid
-    global channel_id
-
+  global givehistory
+  global client
+  global guild
+  global Сopyingmessages
+  global channel
+  global guild_assigned
+  global guildid
+  global channel_id
+  if DmMode != "y":
     if not guild_assigned:
         print("server names:")
         for i, guild in enumerate(client.guilds):
@@ -56,7 +59,6 @@ async def on_ready():
         async for message in channel.history(limit=30, oldest_first=False):
             messages.append(message)
 
-        # Развернуть список с сообщениями
         messages.reverse()
 
         for message in messages:
@@ -72,8 +74,74 @@ async def on_ready():
         await receive_messages(channel)
     else:
         print('The specified channel was not found.')
+  else:
+    global user_id
+    global user
+    user_id = input("User ID: ")
+    user = client.get_user(int(user_id))
+    messages = []
+
+    async for message in user.history(limit=30, oldest_first=False):
+        messages.append(message)
+
+    messages.reverse()
+
+    for message in messages:
+        date = message.created_at
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+    threading.Thread(target=DmMessaging, daemon=True).start()
+    await on_DMmessage()
 
 
+def DmMessaging():
+  global user
+  global user_id
+  loop = asyncio.new_event_loop()
+  asyncio.set_event_loop(loop)
+  if user is None:
+      print('Invalid User ID')
+  while True:
+    message = loop.run_until_complete(async_input(f"message to {user.name}: "))
+    if message == "***Reset":
+        user_id = loop.run_until_complete(async_input("User ID: "))
+        user = client.get_user(int(user_id))
+
+        if user is None:
+            print('Invalid User ID')
+        asyncio.run_coroutine_threadsafe(historyManagerDM(), client.loop)
+        time.sleep(2)
+        continue
+    if message == "***Userlist":
+        userlist = []
+        i=0
+        for user in client.users:
+            userlist.append(user.id)
+            print(f"{i}: ({user.id}) {user.name}")
+            i +=1
+        userid = input("type user index: ")
+        user_id = userlist[int(userid)]
+        user = client.get_user(int(user_id))
+        if user is None:
+            print('Invalid User ID')
+        asyncio.run_coroutine_threadsafe(historyManagerDM(), client.loop)
+        time.sleep(2)
+        continue
+    try:
+        asyncio.run_coroutine_threadsafe(user.send(message), client.loop)
+        print(f'a private message has been sent to the user {user}')
+    except discord.Forbidden:
+        print(f'I dont have permission to send private messages to the user {user}')
+async def on_DMmessage():
+    while True:
+          message = await client.wait_for('message')
+          if isinstance(message.channel,discord.DMChannel):
+              print(f'\nЛичное сообщение: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
+              if notification == "y":
+                  if str(message.author.name) != str(client.user.name):
+                      winsound.Beep(500, 100)
+                      winsound.Beep(1000, 100)
 async def save_channel_messages(channel):
     print("SpyAgentINFO: Сopying messages")
     with open('messages.txt', 'w', encoding='utf-8') as file:
@@ -118,11 +186,15 @@ async def receive_messages(channel):
 
 
 def send_messages():
+    global givehistory
     global channel
     global guild
+    global channel_id
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     while True:
+        time.sleep(0.5)
+        channel = client.get_channel(int(channel_id))
         user_input = loop.run_until_complete(async_input(f'Enter a message to send to {guild.name}: {channel.name}: '))
         if user_input == "***Reset":
             print("server names:")
@@ -141,6 +213,9 @@ def send_messages():
             except:
                 channel_id = 0
             channel = client.get_channel(int(channel_id))
+            print()
+            asyncio.run_coroutine_threadsafe(historyManager(), client.loop)
+            time.sleep(2)
             print(f'Channel selected: {channel.name}')
             continue
 
@@ -174,5 +249,31 @@ async def async_input(prompt):
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, input, prompt)
 
+async def historyManager():
+     messages = []
+     async for message in channel.history(limit=30, oldest_first=False):
+        messages.append(message)
+
+     messages.reverse()
+
+     for message in messages:
+        date = message.created_at
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+
+
+async def historyManagerDM():
+    messages = []
+    async for message in user.history(limit=30, oldest_first=False):
+        messages.append(message)
+
+    messages.reverse()
+
+    for message in messages:
+        date = message.created_at
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
 
 client.run(TOKEN)
