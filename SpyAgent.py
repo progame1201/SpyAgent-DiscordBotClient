@@ -1,13 +1,26 @@
 # -*- coding: utf-8 -*-
-import asyncio
-import time
-from datetime import datetime
+import os
 
+try:
+  import asyncio
+except:
+    os.system("python -m pip install asyncio")
+    import asyncio
+import time
+try:
+  import pytz
+except:
+    os.system("python -m pip install pytz")
+    import asyncio
 import winsound
-import discord
+try:
+ import discord
+except:
+    os.system("python -m pip install discord.py")
+    import asyncio
 import threading
 
-print("SpyAgent 1.5.0, progame1201")
+print("SpyAgent 1.5.2, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
@@ -63,8 +76,9 @@ async def on_ready():
 
         for message in messages:
             date = message.created_at
+            timezone = pytz.timezone('Europe/Moscow')
             rounded_date = date.replace(second=0, microsecond=0)
-            rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+            rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
         if Сopyingmessages == "y":
             await save_channel_messages(channel)
@@ -88,8 +102,9 @@ async def on_ready():
 
     for message in messages:
         date = message.created_at
+        timezone = pytz.timezone('Europe/Moscow')
         rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
         print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
     threading.Thread(target=DmMessaging, daemon=True).start()
     await on_DMmessage()
@@ -137,7 +152,7 @@ async def on_DMmessage():
     while True:
           message = await client.wait_for('message')
           if isinstance(message.channel,discord.DMChannel):
-              print(f'\nЛичное сообщение: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
+              print(f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
               if notification == "y":
                   if str(message.author.name) != str(client.user.name):
                       winsound.Beep(500, 100)
@@ -147,11 +162,9 @@ async def save_channel_messages(channel):
     with open('messages.txt', 'w', encoding='utf-8') as file:
         async for message in channel.history(limit=None):
             date = message.created_at
-
+            timezone = pytz.timezone('Europe/Moscow')
             rounded_date = date.replace(second=0, microsecond=0)
-
-            rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
-
+            rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             file.write(f'{message.author.name}: {rounded_date_string} {message.content}\n')
 
 
@@ -159,6 +172,14 @@ async def receive_messages(channel):
     while True:
         attachment_list = []
         message = await client.wait_for('message')
+        if isinstance(message.channel, discord.DMChannel):
+            print(
+                f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
+            if notification == "y":
+                if str(message.author.name) != str(client.user.name):
+                    winsound.Beep(500, 100)
+                    winsound.Beep(1000, 100)
+            continue
         if message.channel.name in mutelist:
             continue
         if message.attachments:
@@ -170,13 +191,15 @@ async def receive_messages(channel):
               for attachment in message.attachments:
                   attachment_list.append(attachment.url)
           date = message.created_at
+          timezone = pytz.timezone('Europe/Moscow')
           rounded_date = date.replace(second=0, microsecond=0)
-          rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+          rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
           print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
         else:
           date = message.created_at
+          timezone = pytz.timezone('Europe/Moscow')
           rounded_date = date.replace(second=0, microsecond=0)
-          rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+          rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
           print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
 
         if notification == "y":
@@ -258,8 +281,9 @@ async def historyManager():
 
      for message in messages:
         date = message.created_at
+        timezone = pytz.timezone('Europe/Moscow')
         rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
         print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
 
 
@@ -272,8 +296,9 @@ async def historyManagerDM():
 
     for message in messages:
         date = message.created_at
+        timezone = pytz.timezone('Europe/Moscow')
         rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.strftime('%Y-%m-%d %H:%M')
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
         print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
 
 client.run(TOKEN)
