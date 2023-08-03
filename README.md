@@ -1,5 +1,5 @@
 # SpyAgent-DiscordBot description
-a bot that allows you to track messages on connected servers and also send messages to selected channels on behalf of the bot
+a bot that allows you to track messages on connected servers and also send messages to selected channels on behalf of the bot<br>
 the program is designed for Windows OS
 # How to use it?
 you have to go to the website: https://discord.com/developers/applications then create your own discord bot <br>
