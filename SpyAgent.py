@@ -19,8 +19,8 @@ except:
     os.system("python -m pip install discord.py")
     import asyncio
 import threading
-
-print("SpyAgent 1.5.2, progame1201")
+from tkinter import filedialog
+print("SpyAgent 1.7.1, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
@@ -50,7 +50,7 @@ async def on_ready():
         for i, guild in enumerate(client.guilds):
             print(f"{i}: {guild.name}")
 
-        guildid = int(input("server index: "))
+        guildid = input("server index: ")
         print(f'bot {client.user} connected to server: {client.guilds[int(guildid)].name}')
         channellist = []
         print("channel names:")
@@ -88,13 +88,17 @@ async def on_ready():
         await receive_messages(channel)
     else:
         print('The specified channel was not found.')
+        raise Exception("The specified channel was not found.").with_traceback(channel)
   else:
     global user_id
     global user
     user_id = input("User ID: ")
     user = client.get_user(int(user_id))
+    if user == None:
+        print("User not found")
+        time.sleep(10)
+        raise Exception("User not found").with_traceback(user)
     messages = []
-
     async for message in user.history(limit=30, oldest_first=False):
         messages.append(message)
 
@@ -150,10 +154,25 @@ def DmMessaging():
         print(f'I dont have permission to send private messages to the user {user}')
 async def on_DMmessage():
     while True:
+          attachment_list = []
           message = await client.wait_for('message')
           if isinstance(message.channel,discord.DMChannel):
-              print(f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
-              if notification == "y":
+              if message.attachments:
+                  if save_attachments == "y":
+                      for attachment in message.attachments:
+                          attachment_list.append(attachment.filename)
+                          await attachment.save(attachment.filename)
+                  else:
+                      for attachment in message.attachments:
+                          attachment_list.append(attachment.url)
+                  print(f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}, attachments: {attachment_list}')
+                  if notification == "y":
+                      if str(message.author.name) != str(client.user.name):
+                          winsound.Beep(500, 100)
+                          winsound.Beep(1000, 100)
+              else:
+               print(f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
+               if notification == "y":
                   if str(message.author.name) != str(client.user.name):
                       winsound.Beep(500, 100)
                       winsound.Beep(1000, 100)
@@ -265,8 +284,75 @@ def send_messages():
             except:
               print("index not found")
             continue
+        if user_input == "***File":
+            filepath = input("File path:")
+            with open(filepath, 'rb') as image_file:
+                # Отправка изображения на сервер Discord от имени бота
+                asyncio.run_coroutine_threadsafe(channel.send(file=discord.File(filepath)), client.loop)
+            continue
+        if user_input == "***Reaction":
+            print("1 - emoji list")
+            print("2 - type emoji")
+            emojiinput = input("type number:")
+            if emojiinput == "1":
+                i = 0
+                emojilist = []
+                for emoji in client.guilds[0].emojis:
+                    emojilist.append(emoji)
+                    print(f'{i}: {emoji.name} - {emoji}')
+                    i += 1
+                reactemoji = input("type emoji index: ")
+                try:
+                  emoji = emojilist[int(reactemoji)]
+                except:
+                    continue
+            if emojiinput == "2":
+                emoji = input("emoji: ")
+            print("1 - message id")
+            print("2 - message list")
+            messageinput = input("type number:")
+            if messageinput == "2":
+                asyncio.run_coroutine_threadsafe(ReactEmojiList(emoji), client.loop)
+            if messageinput == "1":
+                asyncio.run_coroutine_threadsafe(ReactEmojiMessage(emoji), client.loop)
+            global next
+            next = 0
+            while True:
+              if next == 1:
+                break
+              else:
+                  continue
+            continue
         asyncio.run_coroutine_threadsafe(channel.send(user_input), client.loop)
 
+async def ReactEmojiMessage(emoji):
+    global next
+    messageid = input("message id: ")
+    message = await channel.fetch_message(int(messageid))
+    await message.add_reaction(emoji)
+    print(f"message reacted. Emoji: {emoji}")
+    next = 1
+async def ReactEmojiList(emoji):
+    global next
+    messages = []
+    async for message in channel.history(limit=30, oldest_first=False):
+        messages.append(message)
+
+    messages.reverse()
+    i = 0
+    for message in messages:
+        attachment_list = []
+        date = message.created_at
+        timezone = pytz.timezone('Europe/Moscow')
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+        print(f"{i}: {message.author}: {message.content}")
+        i += 1
+    messageindex = input("message index:")
+    message = messages[int(messageindex)]
+    await message.add_reaction(emoji)
+    print(f"message reacted. Emoji: {emoji}")
+    next = 1
 
 async def async_input(prompt):
     loop = asyncio.get_running_loop()
@@ -280,11 +366,26 @@ async def historyManager():
      messages.reverse()
 
      for message in messages:
-        date = message.created_at
-        timezone = pytz.timezone('Europe/Moscow')
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+         attachment_list = []
+         if message.attachments:
+             if save_attachments == "y":
+                 for attachment in message.attachments:
+                     attachment_list.append(attachment.filename)
+                     await attachment.save(attachment.filename)
+             else:
+                 for attachment in message.attachments:
+                     attachment_list.append(attachment.url)
+             date = message.created_at
+             timezone = pytz.timezone('Europe/Moscow')
+             rounded_date = date.replace(second=0, microsecond=0)
+             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+             print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
+         else:
+             date = message.created_at
+             timezone = pytz.timezone('Europe/Moscow')
+             rounded_date = date.replace(second=0, microsecond=0)
+             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+             print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
 
 
 async def historyManagerDM():
