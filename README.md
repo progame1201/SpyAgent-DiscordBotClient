@@ -9,12 +9,12 @@ next, you will need to switch the lower toggle switches in the bot tab.<br> Next
 # Command list
 All commands work with the prefix ***<br>
 
-In the mode of communication on servers: <br>
+**In the mode of communication on servers:** <br>
 Reset - gives you the opportunity to re-select the channel and server <br>
 File - Allows you to send any file <br>
 Mute - Allows you to select a channel for mute<br>
 Unmute - Allows you to remove the channel from mute <br>
-commands in private messages:<br>
+**commands in private messages:**<br>
 Reset - Allows you to re-select a user by ID
 Userlist - Gives you a list of all the users you can write message to and also lets you choose user
 
