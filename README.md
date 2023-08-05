@@ -16,8 +16,8 @@ Mute - Allows you to select a channel for mute<br>
 Unmute - Allows you to remove the channel from mute <br>
 Reaction - Allows you to put a reaction under the message<br>
 **commands in private messages:**<br>
-Reset - Allows you to re-select a user by ID
-Userlist - Gives you a list of all the users you can write message to and also lets you choose user
+Reset - Allows you to re-select a user by ID<br>
+Userlist - Gives you a list of all the users you can write message to and also lets you choose user<br>
 Mute - Allows you to select a channel for mute<br>
 Unmute - Allows you to remove the channel from mute <br>
 Reaction - Allows you to put a reaction under the message
