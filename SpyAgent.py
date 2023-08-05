@@ -20,7 +20,7 @@ except:
     import asyncio
 import threading
 from tkinter import filedialog
-print("SpyAgent 1.7.1, progame1201")
+print("SpyAgent 1.8.0, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
@@ -69,7 +69,7 @@ async def on_ready():
     if channel:
         messages = []
 
-        async for message in channel.history(limit=30, oldest_first=False):
+        async for message in channel.history(limit=50, oldest_first=False):
             messages.append(message)
 
         messages.reverse()
@@ -120,7 +120,9 @@ def DmMessaging():
   loop = asyncio.new_event_loop()
   asyncio.set_event_loop(loop)
   if user is None:
-      print('Invalid User ID')
+      print("User not found")
+      time.sleep(10)
+      raise Exception("User not found").with_traceback(user)
   while True:
     message = loop.run_until_complete(async_input(f"message to {user.name}: "))
     if message == "***Reset":
@@ -128,7 +130,7 @@ def DmMessaging():
         user = client.get_user(int(user_id))
 
         if user is None:
-            print('Invalid User ID')
+            print("User not found")
         asyncio.run_coroutine_threadsafe(historyManagerDM(), client.loop)
         time.sleep(2)
         continue
@@ -139,6 +141,7 @@ def DmMessaging():
             userlist.append(user.id)
             print(f"{i}: ({user.id}) {user.name}")
             i +=1
+
         userid = input("type user index: ")
         user_id = userlist[int(userid)]
         user = client.get_user(int(user_id))
@@ -146,6 +149,59 @@ def DmMessaging():
             print('Invalid User ID')
         asyncio.run_coroutine_threadsafe(historyManagerDM(), client.loop)
         time.sleep(2)
+        continue
+    if message == "***Mute":
+        mutechanelname = input("type user ID: ")
+        try:
+            mutelist.append(int(mutechanelname))
+        except:
+            print("index not found")
+        continue
+
+    if message == "***Unmute":
+        channellistforunmute = []
+        for i in range(len(mutelist)):
+            unmutech = client.get_user(int(mutelist[i]))
+            channellistforunmute.append(mutelist[i])
+            print(f"{i}: {unmutech.name}")
+        unmutechanelname = input("type user index: ")
+        try:
+            mutelist.remove(channellistforunmute[int(unmutechanelname)])
+        except:
+            print("index not found")
+        continue
+    if message == "***Reaction":
+        print("1 - emoji list")
+        print("2 - type emoji")
+        emojiinput = input("type number:")
+        if emojiinput == "1":
+            i = 0
+            emojilist = []
+            for emoji in client.guilds[0].emojis:
+                emojilist.append(emoji)
+                print(f'{i}: {emoji.name} - {emoji}')
+                i += 1
+            reactemoji = input("type emoji index: ")
+            try:
+                emoji = emojilist[int(reactemoji)]
+            except:
+                continue
+        if emojiinput == "2":
+            emoji = input("emoji: ")
+        print("1 - message id")
+        print("2 - message list")
+        messageinput = input("type number:")
+        if messageinput == "2":
+            asyncio.run_coroutine_threadsafe(ReactEmojiListDM(emoji), client.loop)
+        if messageinput == "1":
+            asyncio.run_coroutine_threadsafe(ReactEmojiMessageDM(emoji), client.loop)
+        global next
+        next = 0
+        while True:
+            if next == 1:
+                break
+            else:
+                continue
         continue
     try:
         asyncio.run_coroutine_threadsafe(user.send(message), client.loop)
@@ -156,6 +212,8 @@ async def on_DMmessage():
     while True:
           attachment_list = []
           message = await client.wait_for('message')
+          if message.author.id in mutelist:
+              continue
           if isinstance(message.channel,discord.DMChannel):
               if message.attachments:
                   if save_attachments == "y":
@@ -199,7 +257,7 @@ async def receive_messages(channel):
                     winsound.Beep(500, 100)
                     winsound.Beep(1000, 100)
             continue
-        if message.channel.name in mutelist:
+        if message.channel.id in mutelist:
             continue
         if message.attachments:
           if save_attachments == "y":
@@ -264,7 +322,7 @@ def send_messages():
         if user_input == "***Mute":
             channellistformute = []
             for i, channel in enumerate(guild.text_channels):
-                channellistformute.append(channel.name)
+                channellistformute.append(channel.id)
                 print(f"{i}: {channel.name}")
             mutechanelname = input("type chanel index: ")
             try:
@@ -276,8 +334,9 @@ def send_messages():
         if user_input == "***Unmute":
             channellistforunmute = []
             for i in range(len(mutelist)):
+                unmutech = client.fetch_channel(mutelist[i])
                 channellistforunmute.append(mutelist[i])
-                print(f"{i}: {mutelist[i]}")
+                print(f"{i}: {unmutech}")
             unmutechanelname = input("type chanel index: ")
             try:
               mutelist.remove(channellistforunmute[int(unmutechanelname)])
@@ -287,7 +346,6 @@ def send_messages():
         if user_input == "***File":
             filepath = input("File path:")
             with open(filepath, 'rb') as image_file:
-                # Отправка изображения на сервер Discord от имени бота
                 asyncio.run_coroutine_threadsafe(channel.send(file=discord.File(filepath)), client.loop)
             continue
         if user_input == "***Reaction":
@@ -335,7 +393,7 @@ async def ReactEmojiMessage(emoji):
 async def ReactEmojiList(emoji):
     global next
     messages = []
-    async for message in channel.history(limit=30, oldest_first=False):
+    async for message in channel.history(limit=50, oldest_first=False):
         messages.append(message)
 
     messages.reverse()
@@ -353,14 +411,43 @@ async def ReactEmojiList(emoji):
     await message.add_reaction(emoji)
     print(f"message reacted. Emoji: {emoji}")
     next = 1
+async def ReactEmojiMessageDM(emoji):
+    global next
+    global user
+    messageid = input("message id: ")
+    message = await user.fetch_message(int(messageid))
+    await message.add_reaction(emoji)
+    print(f"message reacted. Emoji: {emoji}")
+    next = 1
+async def ReactEmojiListDM(emoji):
+    global next
+    global user
+    messages = []
+    async for message in user.history(limit=50, oldest_first=False):
+        messages.append(message)
 
+    messages.reverse()
+    i = 0
+    for message in messages:
+        attachment_list = []
+        date = message.created_at
+        timezone = pytz.timezone('Europe/Moscow')
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+        print(f"{i}: {message.author}: {message.content}")
+        i += 1
+    messageindex = input("message index:")
+    message = messages[int(messageindex)]
+    await message.add_reaction(emoji)
+    print(f"message reacted. Emoji: {emoji}")
+    next = 1
 async def async_input(prompt):
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, input, prompt)
 
 async def historyManager():
      messages = []
-     async for message in channel.history(limit=30, oldest_first=False):
+     async for message in channel.history(limit=50, oldest_first=False):
         messages.append(message)
 
      messages.reverse()
@@ -390,7 +477,7 @@ async def historyManager():
 
 async def historyManagerDM():
     messages = []
-    async for message in user.history(limit=30, oldest_first=False):
+    async for message in user.history(limit=50, oldest_first=False):
         messages.append(message)
 
     messages.reverse()
