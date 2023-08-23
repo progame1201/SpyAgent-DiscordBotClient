@@ -19,11 +19,12 @@ except:
     os.system("python -m pip install discord.py")
     import asyncio
 import threading
-from tkinter import filedialog
-print("SpyAgent 1.8.0, progame1201")
+
+print("SpyAgent 1.9.0, progame1201")
 
 TOKEN = input("Token: ")
 intents = discord.Intents.all()
+intents.presences = True
 client = discord.Client(intents=intents)
 guild_assigned = False
 save_attachments = input("save attachments true? [y/n] ").lower()
@@ -34,6 +35,7 @@ guildid = 0
 channel_id = 0
 mutelist = []
 givehistory = 0
+smutelist = []
 @client.event
 async def on_ready():
   global givehistory
@@ -257,6 +259,8 @@ async def receive_messages(channel):
                     winsound.Beep(500, 100)
                     winsound.Beep(1000, 100)
             continue
+        if message.guild.id in mutelist:
+            continue
         if message.channel.id in mutelist:
             continue
         if message.attachments:
@@ -290,6 +294,7 @@ def send_messages():
     global channel
     global guild
     global channel_id
+    global smutelist
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     while True:
@@ -334,7 +339,7 @@ def send_messages():
         if user_input == "***Unmute":
             channellistforunmute = []
             for i in range(len(mutelist)):
-                unmutech = client.fetch_channel(mutelist[i])
+                unmutech = client.get_channel(mutelist[i])
                 channellistforunmute.append(mutelist[i])
                 print(f"{i}: {unmutech}")
             unmutechanelname = input("type chanel index: ")
@@ -381,7 +386,32 @@ def send_messages():
               else:
                   continue
             continue
+        if user_input == "***Muteserver":
+            for i, guild in enumerate(client.guilds):
+                print(f"{i}: {guild.name}")
+
+            guildid = input("server index: ")
+            smutelist.append(int(client.guilds[int(guildid)].id))
+            continue
+        if user_input == "***Unmuteserver":
+            channellistforunmute = []
+            for i in range(len(smutelist)):
+                unmutech = client.get_guild(smutelist[i])
+                channellistforunmute.append(smutelist[i])
+                print(f"{i}: {unmutech}")
+            unmutechanelname = input("type chanel index: ")
+            try:
+              smutelist.remove(channellistforunmute[int(unmutechanelname)])
+            except:
+              print("index not found")
+            continue
+        if user_input == "***Changestatus":
+            print("status list:\nonline\noffline\nidle")
+            status = input("status:")
+            asyncio.run_coroutine_threadsafe(changestatus(status), client.loop)
+            continue
         asyncio.run_coroutine_threadsafe(channel.send(user_input), client.loop)
+
 
 async def ReactEmojiMessage(emoji):
     global next
@@ -488,5 +518,11 @@ async def historyManagerDM():
         rounded_date = date.replace(second=0, microsecond=0)
         rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
         print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
-
+async def changestatus(status):
+    if status == "online":
+        await client.change_presence(status=discord.Status.online)
+    if status == "offline":
+        await client.change_presence(status=discord.Status.offline)
+    if status == "idle":
+        await client.change_presence(status=discord.Status.idle)
 client.run(TOKEN)
