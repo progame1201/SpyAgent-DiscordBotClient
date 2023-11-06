@@ -19,8 +19,8 @@ File - Allows you to send any file <br>
 Mute - Allows you to select a channel for mute<br>
 Unmute - Allows you to remove the channel from mute <br>
 Reaction - Allows you to put a reaction under the message (dont work in 2.0)<br>
-Muteserver - mute server<br>
-Unmuteserver - unmute server<br>
+Muteguild - mute server<br>
+Unmuteguild - unmute server<br>
 Changestatus - changes your status to the one you specified<br>
 <br>
 **commands in private messages:** (dont work in 2.0)<br>
