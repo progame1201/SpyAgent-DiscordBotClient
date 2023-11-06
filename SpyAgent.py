@@ -1,528 +1,268 @@
-# -*- coding: utf-8 -*-
-import os
-
-try:
-  import asyncio
-except:
-    os.system("python -m pip install asyncio")
-    import asyncio
-import time
-try:
-  import pytz
-except:
-    os.system("python -m pip install pytz")
-    import asyncio
+from disnake.ext import *
+from disnake import *
+from loguru import logger
+import asyncio
 import winsound
-try:
- import discord
-except:
-    os.system("python -m pip install discord.py")
-    import asyncio
-import threading
+import pickle
+import os
+import pytz
+from asyncio import sleep
+import config
+from tkinter import filedialog
 
-print("SpyAgent 1.9.0, progame1201")
+logger.info("Spy Agent 2.0, 2023, progame1201")
+logger.info("Running...")
 
-TOKEN = input("Token: ")
-intents = discord.Intents.all()
-intents.presences = True
-client = discord.Client(intents=intents)
-guild_assigned = False
-save_attachments = input("save attachments true? [y/n] ").lower()
-notification = input("notification true? [y/n] ").lower()
-Сopyingmessages = input("Сopying messages true? [y/n] ").lower()
-DmMode = input("DM mode true? [y/n] ")
-guildid = 0
-channel_id = 0
-mutelist = []
-givehistory = 0
-smutelist = []
+logger.info("Loading mutes...")
+channels_mute_list = []
+guild_mute_list = []
+if os.path.exists("channelmutes"):
+    if os.path.getsize("channelmutes") > 0:
+        data = open("channelmutes", 'rb').read()
+        channels_mute_list = pickle.loads(data)
+    else:
+        logger.warning("Channel mutes file is empty")
+else:
+    open("channelmutes", 'wb').close()
+
+if os.path.exists("guildmutes"):
+    if os.path.getsize("guildmutes") > 0:
+        data = open("guildmutes", 'rb').read()
+        guild_mute_list = pickle.loads(data)
+    else:
+        logger.warning("Guild mutes file is empty")
+else:
+    open("guildmutes", 'wb').close()
+
+client = Client(intents=Intents.all())
 @client.event
 async def on_ready():
-  global givehistory
-  global client
-  global guild
-  global Сopyingmessages
-  global channel
-  global guild_assigned
-  global guildid
-  global channel_id
-  if DmMode != "y":
-    if not guild_assigned:
-        print("server names:")
-        for i, guild in enumerate(client.guilds):
-            print(f"{i}: {guild.name}")
+  logger.info(f"Welcome {client.user.name}! Bot ID: {client.user.id}")
+  await sleep(1)
+  print("Choose a server:")
+  for i, guild in enumerate(client.guilds):
+      print(f"{i}: {guild.name}")
+  data = await async_input("server index:")
+  guild = client.guilds[int(data)]
+  logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id}")
+  await sleep(1)
+  print("Choose channel:")
+  channels: dict[int, dict[str:int]] = {}
+  for i, channel in enumerate(guild.text_channels):
+      channels.update({i: {channel.name: channel.id}})
+      print(f"{i}: {channel.name}")
+  data = await async_input("server index:")
+  channel = client.get_channel(list(channels.get(int(data)).values())[0])
+  logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
+  await get_history(channel)
+  asyncio.run_coroutine_threadsafe(receive_messages(client), client.loop)
+  asyncio.run_coroutine_threadsafe(chatting(channel, guild), client.loop)
 
-        guildid = input("server index: ")
-        print(f'bot {client.user} connected to server: {client.guilds[int(guildid)].name}')
-        channellist = []
-        print("channel names:")
-        guild = client.guilds[int(guildid)]
-        for i, channel in enumerate(guild.text_channels):
-            channellist.append(channel.id)
-            print(f"{i}: {channel.name}")
-        chnlindx = input("chanel index: ")
-        try:
-         channel_id = channellist[int(chnlindx)]
-        except:
-         channel_id = 0
-        guild_assigned = True
+async def receive_messages(client):
+    while True:
+      attachment_list = []
+      message = await client.wait_for('message')
+      if isinstance(message.channel, DMChannel):
+        print(f'\nPrivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
+        continue
+      if message.channel.id in channels_mute_list:
+          continue
+      if message.guild.id in guild_mute_list:
+          continue
+      if message.attachments:
+        for attachment in message.attachments:
+          attachment_list.append(attachment.url)
+        date = message.created_at
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+        print(
+          f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
+      else:
+        date = message.created_at
+        rounded_date = date.replace(second=0, microsecond=0)
+        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+        print(
+          f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
+      if config.notification == True:
+          winsound.Beep(500, 100)
+          winsound.Beep(1000, 100)
 
-    channel = client.get_channel(channel_id)
-    if channel:
-        messages = []
 
-        async for message in channel.history(limit=50, oldest_first=False):
-            messages.append(message)
+async def chatting(channel:TextChannel, guild:Guild):
+ while True:
+   await sleep(1)
+   senddata = await async_input(f"Message to {guild.name}: {channel.name}:\n")
+   if senddata.lower() == "***help":
+       print("#####HELP#####\n***Mute - mute any channel\n***Unmute - unmute any channel\n***Delete - delete any message you have selected\n***Reset - Re-select the guild and channel for communication\n***Resetchannel - Re-select a channel for communication\n***File - send a file\n***Muteguild - mute any guild\n***Unmuteguild - unmute any guild\n##############")
+       continue
+   if senddata.lower() == "***mute":
+       channellistformute = []
+       for i, mchannel in enumerate(guild.text_channels):
+           if mchannel.id in channels_mute_list:
+               channellistformute.append(mchannel.id)
+               continue
+           channellistformute.append(mchannel.id)
+           print(f"{i}: {mchannel.name}")
+       mutechanelname = await async_input("type chanel index: ")
+       try:
+           mchannel = client.get_channel(channellistformute[int(mutechanelname)])
+           channels_mute_list.append(channellistformute[int(mutechanelname)])
+           with open('channelmutes', 'wb') as f:
+               towrite = pickle.dumps(channels_mute_list)
+               f.write(towrite)
+           logger.success(f"Channel '{mchannel.name}' muted")
+       except Exception as e:
+           print(f"index not found\n{e}")
+       continue
 
-        messages.reverse()
+   if senddata.lower() == "***unmute":
+       channellistforunmute = []
+       for i in range(len(channels_mute_list)):
+           unmutech = client.get_channel(channels_mute_list[i])
+           channellistforunmute.append(channels_mute_list[i])
+           print(f"{i}: {unmutech}")
+       unmutechanelname = await async_input("type chanel index: ")
+       try:
+           mchannel = client.get_channel(channellistforunmute[int(unmutechanelname)])
+           channels_mute_list.remove(channellistforunmute[int(unmutechanelname)])
+           with open('channelmutes', 'wb') as f:
+               towrite = pickle.dumps(channels_mute_list)
+               f.write(towrite)
+           logger.success(f"Channel '{mchannel.name}' unmuted")
+       except Exception as e:
+           print(f"index not found\n{e}")
+       continue
+   if senddata.lower() == "***delete":
+       messages = []
+       yourmessages:dict[int:Message] = {}
+       async for message in channel.history(limit=config.history_size, oldest_first=False):
+           messages.append(message)
+       messages.reverse()
+       i = 0
+       for message in messages:
+           if message.author.id == client.user.id:
+             yourmessages[i] = message
+             date = message.created_at
+             rounded_date = date.replace(second=0, microsecond=0)
+             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+             print(f"{i}: {message.channel}: {rounded_date_string} {message.author}: {message.content}")
+             i += 1
+       data = await async_input("message index:")
+       if data == "" or data == None:
+           continue
+       todelmsg = yourmessages.get(int(data))
+       await todelmsg.delete()
+       logger.success(f"Message: '{todelmsg.content}' deleted")
+       continue
+   if senddata.lower() == "***reset":
+       print("Choose a server:")
+       for i, guild in enumerate(client.guilds):
+           print(f"{i}: {guild.name}")
+       data = await async_input("server index:")
+       if data == "" or data == None:
+           continue
+       guild = client.guilds[int(data)]
+       logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id}")
+       await sleep(1)
+       print("Choose a channel:")
+       channels: dict[int, dict[str:int]] = {}
+       for i, channel in enumerate(guild.text_channels):
+           channels.update({i: {channel.name: channel.id}})
+           print(f"{i}: {channel.name}")
+       data = await async_input("server index:")
+       if data == "" or data == None:
+           continue
+       channel = client.get_channel(list(channels.get(int(data)).values())[0])
+       logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
+       await get_history(channel)
+       continue
+   if senddata.lower() == "***resetchannel":
+       print("Choose a channel:")
+       channels: dict[int, dict[str:int]] = {}
+       for i, channel in enumerate(guild.text_channels):
+           channels.update({i: {channel.name: channel.id}})
+           print(f"{i}: {channel.name}")
+       data = await async_input("channel index:")
+       if data == "" or data == None:
+           continue
+       channel = client.get_channel(list(channels.get(int(data)).values())[0])
+       logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
+       await get_history(channel)
+       continue
+   if senddata.lower() == "***file":
+       try:
+         file = filedialog.askopenfilename()
+         await channel.send(file=File(file))
+       except Exception as e:
+           print(f"error sending file\n{e}")
+       continue
+   if senddata.lower() == "***Changestatus":
+       print("status list:\nonline\noffline\nidle")
+       status = input("status:")
+       if status == "online":
+           await client.change_presence(status=Status.online)
+       if status == "offline":
+           await client.change_presence(status=Status.offline)
+       if status == "idle":
+           await client.change_presence(status=Status.idle)
+       continue
+   if senddata.lower() == "***muteguild":
+       guildlistformute = []
+       for i, mguild in enumerate(client.guilds):
+           if mguild.id in guild_mute_list:
+               guildlistformute.append(mguild.id)
+               continue
+           guildlistformute.append(mguild.id)
+           print(f"{i}: {mguild.name}")
+       muteguildname = await async_input("type guild index: ")
+       try:
+           mguild = client.get_guild(guildlistformute[int(muteguildname)])
+           guild_mute_list.append(mguild.id)
+           with open('guildmutes', 'wb') as f:
+               towrite = pickle.dumps(guild_mute_list)
+               f.write(towrite)
+           logger.success(f"Guild '{mguild.name}' muted")
+       except Exception as e:
+           print(f"index not found\n{e}")
+       continue
+   if senddata.lower() == "***unmuteguild":
+       guildlistforunmute = []
+       for i in range(len(guild_mute_list)):
+           unmuteg = client.get_guild(guild_mute_list[i])
+           guildlistforunmute.append(guild_mute_list[i])
+           print(f"{i}: {unmuteg}")
+       unmutechanelname = await async_input("type guild index: ")
+       try:
+           mguild = client.get_guild(guildlistforunmute[int(unmutechanelname)])
+           guild_mute_list.remove(mguild.id)
+           with open('guildmutes', 'wb') as f:
+               towrite = pickle.dumps(guild_mute_list)
+               f.write(towrite)
+           logger.success(f"Guild '{mguild.name}' unmuted")
+       except Exception as e:
+           print(f"index not found\n{e}")
+       continue
+   await channel.send(senddata)
 
-        for message in messages:
-            date = message.created_at
-            timezone = pytz.timezone('Europe/Moscow')
-            rounded_date = date.replace(second=0, microsecond=0)
-            rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
-        if Сopyingmessages == "y":
-            await save_channel_messages(channel)
-
-        print(f'The bot receives messages. Channel selected: {channel.name}')
-        threading.Thread(target=send_messages, daemon=True).start()
-        await receive_messages(channel)
+async def get_history(channel:TextChannel):
+  messages = []
+  async for message in channel.history(limit=config.history_size, oldest_first=False):
+    messages.append(message)
+  print("Channel history:\n#####################")
+  messages.reverse()
+  for message in messages:
+    date = message.created_at
+    rounded_date = date.replace(second=0, microsecond=0)
+    rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+    attachment_list = []
+    if message.attachments:
+        for attachment in message.attachments:
+            attachment_list.append(attachment.url)
+        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}, attachments: {attachment_list}")
     else:
-        print('The specified channel was not found.')
-        raise Exception("The specified channel was not found.").with_traceback(channel)
-  else:
-    global user_id
-    global user
-    user_id = input("User ID: ")
-    user = client.get_user(int(user_id))
-    if user == None:
-        print("User not found")
-        time.sleep(10)
-        raise Exception("User not found").with_traceback(user)
-    messages = []
-    async for message in user.history(limit=30, oldest_first=False):
-        messages.append(message)
-
-    messages.reverse()
-
-    for message in messages:
-        date = message.created_at
-        timezone = pytz.timezone('Europe/Moscow')
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
         print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
-    threading.Thread(target=DmMessaging, daemon=True).start()
-    await on_DMmessage()
-
-
-def DmMessaging():
-  global user
-  global user_id
-  loop = asyncio.new_event_loop()
-  asyncio.set_event_loop(loop)
-  if user is None:
-      print("User not found")
-      time.sleep(10)
-      raise Exception("User not found").with_traceback(user)
-  while True:
-    message = loop.run_until_complete(async_input(f"message to {user.name}: "))
-    if message == "***Reset":
-        user_id = loop.run_until_complete(async_input("User ID: "))
-        user = client.get_user(int(user_id))
-
-        if user is None:
-            print("User not found")
-        asyncio.run_coroutine_threadsafe(historyManagerDM(), client.loop)
-        time.sleep(2)
-        continue
-    if message == "***Userlist":
-        userlist = []
-        i=0
-        for user in client.users:
-            userlist.append(user.id)
-            print(f"{i}: ({user.id}) {user.name}")
-            i +=1
-
-        userid = input("type user index: ")
-        user_id = userlist[int(userid)]
-        user = client.get_user(int(user_id))
-        if user is None:
-            print('Invalid User ID')
-        asyncio.run_coroutine_threadsafe(historyManagerDM(), client.loop)
-        time.sleep(2)
-        continue
-    if message == "***Mute":
-        mutechanelname = input("type user ID: ")
-        try:
-            mutelist.append(int(mutechanelname))
-        except:
-            print("index not found")
-        continue
-
-    if message == "***Unmute":
-        channellistforunmute = []
-        for i in range(len(mutelist)):
-            unmutech = client.get_user(int(mutelist[i]))
-            channellistforunmute.append(mutelist[i])
-            print(f"{i}: {unmutech.name}")
-        unmutechanelname = input("type user index: ")
-        try:
-            mutelist.remove(channellistforunmute[int(unmutechanelname)])
-        except:
-            print("index not found")
-        continue
-    if message == "***Reaction":
-        print("1 - emoji list")
-        print("2 - type emoji")
-        emojiinput = input("type number:")
-        if emojiinput == "1":
-            i = 0
-            emojilist = []
-            for emoji in client.guilds[0].emojis:
-                emojilist.append(emoji)
-                print(f'{i}: {emoji.name} - {emoji}')
-                i += 1
-            reactemoji = input("type emoji index: ")
-            try:
-                emoji = emojilist[int(reactemoji)]
-            except:
-                continue
-        if emojiinput == "2":
-            emoji = input("emoji: ")
-        print("1 - message id")
-        print("2 - message list")
-        messageinput = input("type number:")
-        if messageinput == "2":
-            asyncio.run_coroutine_threadsafe(ReactEmojiListDM(emoji), client.loop)
-        if messageinput == "1":
-            asyncio.run_coroutine_threadsafe(ReactEmojiMessageDM(emoji), client.loop)
-        global next
-        next = 0
-        while True:
-            if next == 1:
-                break
-            else:
-                continue
-        continue
-    try:
-        asyncio.run_coroutine_threadsafe(user.send(message), client.loop)
-        print(f'a private message has been sent to the user {user}')
-    except discord.Forbidden:
-        print(f'I dont have permission to send private messages to the user {user}')
-async def on_DMmessage():
-    while True:
-          attachment_list = []
-          message = await client.wait_for('message')
-          if message.author.id in mutelist:
-              continue
-          if isinstance(message.channel,discord.DMChannel):
-              if message.attachments:
-                  if save_attachments == "y":
-                      for attachment in message.attachments:
-                          attachment_list.append(attachment.filename)
-                          await attachment.save(attachment.filename)
-                  else:
-                      for attachment in message.attachments:
-                          attachment_list.append(attachment.url)
-                  print(f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}, attachments: {attachment_list}')
-                  if notification == "y":
-                      if str(message.author.name) != str(client.user.name):
-                          winsound.Beep(500, 100)
-                          winsound.Beep(1000, 100)
-              else:
-               print(f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
-               if notification == "y":
-                  if str(message.author.name) != str(client.user.name):
-                      winsound.Beep(500, 100)
-                      winsound.Beep(1000, 100)
-async def save_channel_messages(channel):
-    print("SpyAgentINFO: Сopying messages")
-    with open('messages.txt', 'w', encoding='utf-8') as file:
-        async for message in channel.history(limit=None):
-            date = message.created_at
-            timezone = pytz.timezone('Europe/Moscow')
-            rounded_date = date.replace(second=0, microsecond=0)
-            rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-            file.write(f'{message.author.name}: {rounded_date_string} {message.content}\n')
-
-
-async def receive_messages(channel):
-    while True:
-        attachment_list = []
-        message = await client.wait_for('message')
-        if isinstance(message.channel, discord.DMChannel):
-            print(
-                f'\nprivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
-            if notification == "y":
-                if str(message.author.name) != str(client.user.name):
-                    winsound.Beep(500, 100)
-                    winsound.Beep(1000, 100)
-            continue
-        if message.guild.id in mutelist:
-            continue
-        if message.channel.id in mutelist:
-            continue
-        if message.attachments:
-          if save_attachments == "y":
-            for attachment in message.attachments:
-                attachment_list.append(attachment.filename)
-                await attachment.save(attachment.filename)
-          else:
-              for attachment in message.attachments:
-                  attachment_list.append(attachment.url)
-          date = message.created_at
-          timezone = pytz.timezone('Europe/Moscow')
-          rounded_date = date.replace(second=0, microsecond=0)
-          rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-          print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
-        else:
-          date = message.created_at
-          timezone = pytz.timezone('Europe/Moscow')
-          rounded_date = date.replace(second=0, microsecond=0)
-          rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-          print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
-
-        if notification == "y":
-            if str(message.author.name) != str(client.user.name):
-              winsound.Beep(500, 100)
-              winsound.Beep(1000, 100)
-
-
-def send_messages():
-    global givehistory
-    global channel
-    global guild
-    global channel_id
-    global smutelist
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    while True:
-        time.sleep(0.5)
-        channel = client.get_channel(int(channel_id))
-        user_input = loop.run_until_complete(async_input(f'Enter a message to send to {guild.name}: {channel.name}: '))
-        if user_input == "***Reset":
-            print("server names:")
-            for i, guild in enumerate(client.guilds):
-                print(f"{i}: {guild.name}")
-            guildid = int(input("server index: "))
-            guild = client.guilds[int(guildid)]
-            channellist = []
-            print("channel names:")
-            for i, channel in enumerate(guild.text_channels):
-                channellist.append(channel.id)
-                print(f"{i}: {channel.name}")
-            chnlindx = input("chanel index: ")
-            try:
-                channel_id = channellist[int(chnlindx)]
-            except:
-                channel_id = 0
-            channel = client.get_channel(int(channel_id))
-            print()
-            asyncio.run_coroutine_threadsafe(historyManager(), client.loop)
-            time.sleep(2)
-            print(f'Channel selected: {channel.name}')
-            continue
-
-        if user_input == "***Mute":
-            channellistformute = []
-            for i, channel in enumerate(guild.text_channels):
-                channellistformute.append(channel.id)
-                print(f"{i}: {channel.name}")
-            mutechanelname = input("type chanel index: ")
-            try:
-              mutelist.append(channellistformute[int(mutechanelname)])
-            except:
-               print("index not found")
-            continue
-
-        if user_input == "***Unmute":
-            channellistforunmute = []
-            for i in range(len(mutelist)):
-                unmutech = client.get_channel(mutelist[i])
-                channellistforunmute.append(mutelist[i])
-                print(f"{i}: {unmutech}")
-            unmutechanelname = input("type chanel index: ")
-            try:
-              mutelist.remove(channellistforunmute[int(unmutechanelname)])
-            except:
-              print("index not found")
-            continue
-        if user_input == "***File":
-            filepath = input("File path:")
-            with open(filepath, 'rb') as image_file:
-                asyncio.run_coroutine_threadsafe(channel.send(file=discord.File(filepath)), client.loop)
-            continue
-        if user_input == "***Reaction":
-            print("1 - emoji list")
-            print("2 - type emoji")
-            emojiinput = input("type number:")
-            if emojiinput == "1":
-                i = 0
-                emojilist = []
-                for emoji in client.guilds[0].emojis:
-                    emojilist.append(emoji)
-                    print(f'{i}: {emoji.name} - {emoji}')
-                    i += 1
-                reactemoji = input("type emoji index: ")
-                try:
-                  emoji = emojilist[int(reactemoji)]
-                except:
-                    continue
-            if emojiinput == "2":
-                emoji = input("emoji: ")
-            print("1 - message id")
-            print("2 - message list")
-            messageinput = input("type number:")
-            if messageinput == "2":
-                asyncio.run_coroutine_threadsafe(ReactEmojiList(emoji), client.loop)
-            if messageinput == "1":
-                asyncio.run_coroutine_threadsafe(ReactEmojiMessage(emoji), client.loop)
-            global next
-            next = 0
-            while True:
-              if next == 1:
-                break
-              else:
-                  continue
-            continue
-        if user_input == "***Muteserver":
-            for i, guild in enumerate(client.guilds):
-                print(f"{i}: {guild.name}")
-
-            guildid = input("server index: ")
-            smutelist.append(int(client.guilds[int(guildid)].id))
-            continue
-        if user_input == "***Unmuteserver":
-            channellistforunmute = []
-            for i in range(len(smutelist)):
-                unmutech = client.get_guild(smutelist[i])
-                channellistforunmute.append(smutelist[i])
-                print(f"{i}: {unmutech}")
-            unmutechanelname = input("type chanel index: ")
-            try:
-              smutelist.remove(channellistforunmute[int(unmutechanelname)])
-            except:
-              print("index not found")
-            continue
-        if user_input == "***Changestatus":
-            print("status list:\nonline\noffline\nidle")
-            status = input("status:")
-            asyncio.run_coroutine_threadsafe(changestatus(status), client.loop)
-            continue
-        asyncio.run_coroutine_threadsafe(channel.send(user_input), client.loop)
-
-
-async def ReactEmojiMessage(emoji):
-    global next
-    messageid = input("message id: ")
-    message = await channel.fetch_message(int(messageid))
-    await message.add_reaction(emoji)
-    print(f"message reacted. Emoji: {emoji}")
-    next = 1
-async def ReactEmojiList(emoji):
-    global next
-    messages = []
-    async for message in channel.history(limit=50, oldest_first=False):
-        messages.append(message)
-
-    messages.reverse()
-    i = 0
-    for message in messages:
-        attachment_list = []
-        date = message.created_at
-        timezone = pytz.timezone('Europe/Moscow')
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-        print(f"{i}: {message.author}: {message.content}")
-        i += 1
-    messageindex = input("message index:")
-    message = messages[int(messageindex)]
-    await message.add_reaction(emoji)
-    print(f"message reacted. Emoji: {emoji}")
-    next = 1
-async def ReactEmojiMessageDM(emoji):
-    global next
-    global user
-    messageid = input("message id: ")
-    message = await user.fetch_message(int(messageid))
-    await message.add_reaction(emoji)
-    print(f"message reacted. Emoji: {emoji}")
-    next = 1
-async def ReactEmojiListDM(emoji):
-    global next
-    global user
-    messages = []
-    async for message in user.history(limit=50, oldest_first=False):
-        messages.append(message)
-
-    messages.reverse()
-    i = 0
-    for message in messages:
-        attachment_list = []
-        date = message.created_at
-        timezone = pytz.timezone('Europe/Moscow')
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-        print(f"{i}: {message.author}: {message.content}")
-        i += 1
-    messageindex = input("message index:")
-    message = messages[int(messageindex)]
-    await message.add_reaction(emoji)
-    print(f"message reacted. Emoji: {emoji}")
-    next = 1
+  print("#####################")
 async def async_input(prompt):
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, input, prompt)
+    return await asyncio.to_thread(input, prompt)
 
-async def historyManager():
-     messages = []
-     async for message in channel.history(limit=50, oldest_first=False):
-        messages.append(message)
-
-     messages.reverse()
-
-     for message in messages:
-         attachment_list = []
-         if message.attachments:
-             if save_attachments == "y":
-                 for attachment in message.attachments:
-                     attachment_list.append(attachment.filename)
-                     await attachment.save(attachment.filename)
-             else:
-                 for attachment in message.attachments:
-                     attachment_list.append(attachment.url)
-             date = message.created_at
-             timezone = pytz.timezone('Europe/Moscow')
-             rounded_date = date.replace(second=0, microsecond=0)
-             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-             print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
-         else:
-             date = message.created_at
-             timezone = pytz.timezone('Europe/Moscow')
-             rounded_date = date.replace(second=0, microsecond=0)
-             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-             print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
-
-
-async def historyManagerDM():
-    messages = []
-    async for message in user.history(limit=50, oldest_first=False):
-        messages.append(message)
-
-    messages.reverse()
-
-    for message in messages:
-        date = message.created_at
-        timezone = pytz.timezone('Europe/Moscow')
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
-async def changestatus(status):
-    if status == "online":
-        await client.change_presence(status=discord.Status.online)
-    if status == "offline":
-        await client.change_presence(status=discord.Status.offline)
-    if status == "idle":
-        await client.change_presence(status=discord.Status.idle)
-client.run(TOKEN)
+client.run(config.Token)
