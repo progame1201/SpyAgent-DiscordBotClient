@@ -1,0 +1,4 @@
+disnake
+loguru
+pytz
+asyncio
