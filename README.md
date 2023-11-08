@@ -4,8 +4,8 @@
 a bot that allows you to track messages on connected servers and also send messages to selected channels on behalf of the bot<br>
 the program is designed for Windows OS
 # How to use it?
-To use this program you need python preferably version 3.11
-To install all the necessary modules download requirements.txt and enter the pip install -r command in the console requirements.txt
+To use this program you need python preferably version 3.11<br>
+To install all the necessary modules download requirements.txt and enter the pip install -r  requirements.txt command in the console<br>
 you have to go to the website: https://discord.com/developers/applications then create your own discord bot <br>
 <br>
 next, you will need to switch the lower toggle switches in the bot tab.<br> Next, generate your link and invite your bot to your server.<br> Next, you need to get your bot's token and insert it into the application.<br> Then select the server and channel and you can now use it.<br> If you want to change the server and the text channel, then when sending a message, you can write ***Reset and select the server and the text channel. 
