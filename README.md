@@ -2,7 +2,8 @@
 
 # SpyAgent-DiscordBot description
 a bot that allows you to track messages on connected servers and also send messages to selected channels on behalf of the bot<br>
-the program is designed for Windows OS
+the program is designed for Windows OS<br>
+I recommend using Windows Terminal: https://www.microsoft.com/store/productId/9N0DX20HK701?ocid=pdpshare
 # How to use it?
 To use this program you need python preferably version 3.11<br>
 To install all the necessary modules download requirements.txt and enter the <br>`pip install -r  path/to/requirements.txt`<br>command in the console<br>
@@ -10,8 +11,9 @@ you have to go to the website: https://discord.com/developers/applications then 
 Next, turn on the switches under the Privileged Gateway Intents category located in the bot settings.
 ![screenshot](https://i.ibb.co/N2tdQBj/13213113.png)<br><br>
 Next, generate your link and invite your bot to your server.<br>
-Next, you need to get your bot's token and insert it into the application.<br>
-Then select the server and channel and you can now use it.
+Next, you need to get your bot's token and insert it into the config.<br>
+Then select the server and channel and you can now use it.<br>
+to find out all the commands and their functionality, you can type ***help<br>
 <br>
 
 # Command list
@@ -37,3 +39,6 @@ __All commands work with the prefix ***<br>__
 - Mute - Allows you add user to mute list<br>
 - Unmute - Allows you to remove user from mute list <br>
 - Reaction - Allows you to put a reaction under the message
+
+### demo:
+![app work](https://i.ibb.co/rcwcT2D/demo.gif)

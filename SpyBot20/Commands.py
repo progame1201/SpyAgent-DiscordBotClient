@@ -125,8 +125,8 @@ class Commands:
         data = await self.async_input("server index:")
         if data == "" or data == None:
             return
-        guild = self.client.guilds[int(data)]
-        logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id}")
+        guild:Guild = self.client.guilds[int(data)]
+        logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id} guild icon url: {guild.icon.url}")
         await sleep(1)
         print("Choose a channel:")
         channels: dict[int, dict[str:int]] = {}
