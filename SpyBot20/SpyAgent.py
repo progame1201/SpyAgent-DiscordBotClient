@@ -5,13 +5,14 @@ import asyncio
 import winsound
 import pickle
 import os
+import SpyAgentPM
 import pytz
 from asyncio import sleep
 import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.2.0, 2023, progame1201")
+logger.info("❄Spy Agent 2.3.0❄, 2023, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -72,26 +73,26 @@ async def detector():
         while True:
             reaction, user = await client.wait_for('reaction_add')
             if channel.id == reaction.message.channel.id:
-             print(f"Reaction {reaction.emoji} |was added to: {reaction.message.guild}: {reaction.message.channel}: {reaction.message.author}: {reaction.message.content}")
+             print(f"Reaction {reaction.emoji} | was added to: {reaction.message.guild}: {reaction.message.channel}: {reaction.message.author}: {reaction.message.content}")
     async def reaction_remove():
         while True:
             reaction, user = await client.wait_for('reaction_remove')
             if channel.id == reaction.message.channel.id:
-             print(f"Reaction {reaction.emoji} |was removed from: {reaction.message.guild}: {reaction.message.channel}: {reaction.message.author}: {reaction.message.content}")
+             print(f"Reaction {reaction.emoji} | was removed from: {reaction.message.guild}: {reaction.message.channel}: {reaction.message.author}: {reaction.message.content}")
     async def message_delete():
        while True:
         message:Message = await client.wait_for("message_delete")
         if channel.id == message.channel.id:
-         print(f"Message {message.content} |was removed from: {message.guild}: {message.channel}: {message.author}")
+         print(f"Message {message.content} | was removed from: {message.guild}: {message.channel}: {message.author}")
     async def message_edit():
        while True:
         before, after = await client.wait_for("message_edit")
         if channel.id == after.channel.id:
-         print(f"Message: {before.content} |has been changed to: {after.content} |in: {after.guild}: {after.channel}: {after.author}")
+         print(f"Message: {before.content} | has been changed to: {after.content} |in: {after.guild}: {after.channel}: {after.author}")
     async def guild_remove():
         while True:
             guild = await client.wait_for("guild_remove")
-            print(f"The guild: {guild.name} |has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild.")
+            print(f"The guild: {guild.name} | has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild.")
     if config.detector:
         if config.on_reaction_add:
             asyncio.run_coroutine_threadsafe(reaction_add(), client.loop)
@@ -163,6 +164,7 @@ async def chatting():
  cm.new(command_name="***gethistory", func=cmnds.get_history)
  cm.new(command_name="***reaction", func=cmnds.reaction)
  cm.new(command_name="***privatemsg", func=cmnds.privatemsg)
+ cm.new(command_name="***edit", func=cmnds.edit)
  print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}type ***help to get more info!")
  logger.success("Command manager started!")
  while True:

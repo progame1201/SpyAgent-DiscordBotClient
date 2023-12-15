@@ -31,14 +31,14 @@ __All commands work with the prefix ***<br>__
 + gethistory - Get the history of the channel you are on<br>
 + delete - delete a message<br>
 + privatemsg - Send a private message to the user<br>
++ edit - Edit the message
 
-### **commands in private messages:** *(dont work in 2.0)*<br>
+### **commands in private messages:<br>
 
-- Reset - Allows you to re-select a user by ID<br>
-- Userlist - Gives you a list of all the users you can write message to and also - lets you choose user<br>
-- Mute - Allows you add user to mute list<br>
-- Unmute - Allows you to remove user from mute list <br>
-- Reaction - Allows you to put a reaction under the message
-
-### demo:
-![app work](https://i.ibb.co/rcwcT2D/demo.gif)
++ reset - Gives you the opportunity to re-select the channel and server <br>
++ file - Allows you to send any file <br>
++ reaction - Put a reaction under the message<br>
++ status - Changes your status to the one you specified<br>
++ gethistory - Get the history of the channel you are on<br>
++ delete - delete a message<br>
++ edit - Edit the message

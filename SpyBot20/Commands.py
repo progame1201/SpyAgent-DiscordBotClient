@@ -12,7 +12,7 @@ from colorama import Fore, init
 class Commands:
     '''All commands of SpyAgent 2.1.0+
     '''
-    def __init__(self, client, guild, channel):
+    def __init__(self, client=None, guild=None, channel=None):
         self.client = client
         self.channel:TextChannel = channel
         self.guild = guild
@@ -270,4 +270,32 @@ class Commands:
         user:User = self.client.get_user(usrid)
         msg = await self.async_input(f"{Fore.LIGHTBLACK_EX}Message to {user.name}:")
         await user.send(msg)
+    async def pmreset(self):
+        usrid = int(await self.async_input("user id:"))
+        user: User = self.client.get_user(usrid)
+        self.channel = user
+        return {"channel":user}
+    async def edit(self):
+        messages = []
+        yourmessages: dict[int:Message] = {}
+        async for message in self.channel.history(limit=config.history_size, oldest_first=False):
+            messages.append(message)
+        messages.reverse()
+        i = 0
+        for message in messages:
+            if message.author.id == self.client.user.id:
+                yourmessages[i] = message
+                date = message.created_at
+                rounded_date = date.replace(second=0, microsecond=0)
+                rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+                print(f"{i}: {message.channel}: {rounded_date_string} {message.author}: {message.content}")
+                i += 1
+        data = await self.async_input("message index:")
+        if data == "" or data == None:
+            return
+        edmsg:Message = yourmessages.get(int(data))
+        oldcont = edmsg.content
+        data = await self.async_input("new message:")
+        await edmsg.edit(content=data)
+        logger.success(f"Message: {oldcont} | edited to: {data}")
 
