@@ -33,7 +33,7 @@ __All commands work with the prefix ***<br>__
 + privatemsg - Send a private message to the user<br>
 + edit - Edit the message
 
-### **commands in private messages:<br>
+### **commands in private messages:**<br>
 
 + reset - Gives you the opportunity to re-select the channel and server <br>
 + file - Allows you to send any file <br>
