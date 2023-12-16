@@ -5,14 +5,13 @@ import asyncio
 import winsound
 import pickle
 import os
-import SpyAgentPM
 import pytz
 from asyncio import sleep
 import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("❄Spy Agent 2.3.0❄, 2023, progame1201")
+logger.info("❄Spy Agent 2.3.1❄, 2023, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -73,12 +72,12 @@ async def detector():
         while True:
             reaction, user = await client.wait_for('reaction_add')
             if channel.id == reaction.message.channel.id:
-             print(f"Reaction {reaction.emoji} | was added to: {reaction.message.guild}: {reaction.message.channel}: {reaction.message.author}: {reaction.message.content}")
+             print(f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: {reaction.message.content} | by {user.name}")
     async def reaction_remove():
         while True:
             reaction, user = await client.wait_for('reaction_remove')
             if channel.id == reaction.message.channel.id:
-             print(f"Reaction {reaction.emoji} | was removed from: {reaction.message.guild}: {reaction.message.channel}: {reaction.message.author}: {reaction.message.content}")
+             print(f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: {reaction.message.content} | by {user.name}")
     async def message_delete():
        while True:
         message:Message = await client.wait_for("message_delete")
@@ -142,6 +141,7 @@ async def receive_messages():
         else:
           print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
       if config.notification == True:
+        if message.author.id != client.user.id:
           winsound.Beep(500, 100)
           winsound.Beep(1000, 100)
 
@@ -195,12 +195,23 @@ async def get_history(channel:TextChannel):
     rounded_date = date.replace(second=0, microsecond=0)
     rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
     attachment_list = []
+    reactions_list = []
     if message.attachments:
         for attachment in message.attachments:
             attachment_list.append(attachment.url)
-        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}, attachments: {attachment_list}")
+        if message.reactions:
+            for reaction in message.reactions:
+              reactions_list.append(reaction.emoji)
+            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list} | reactions: {reactions_list}")
+        else:
+            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list}")
     else:
-        print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+        if message.reactions:
+            for reaction in message.reactions:
+              reactions_list.append(reaction.emoji)
+            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | reactions: {reactions_list}")
+        else:
+            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
   print("#####################")
 async def async_input(prompt):
     return await asyncio.to_thread(input, prompt)

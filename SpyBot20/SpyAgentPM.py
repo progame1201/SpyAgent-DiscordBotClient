@@ -39,8 +39,9 @@ class Handler:
                     else:
                         print(f'\n{message.channel}: {rounded_date_string} ({message.author.id}) {message.author.name}: {message.content}')
                     if config.notification == True:
-                     winsound.Beep(500, 100)
-                     winsound.Beep(1000, 100)
+                     if message.author.id != client.user.id:
+                      winsound.Beep(500, 100)
+                      winsound.Beep(1000, 100)
 
     async def detector(self):
         async def reaction_add():
@@ -103,7 +104,7 @@ class Handler:
                 continue
             await self.channel.send(senddata)
 
-    async def get_history(self, channel:TextChannel):
+    async def get_history(self, channel: TextChannel):
         messages = []
         async for message in channel.history(limit=config.history_size, oldest_first=False):
             messages.append(message)
@@ -114,13 +115,26 @@ class Handler:
             rounded_date = date.replace(second=0, microsecond=0)
             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             attachment_list = []
+            reactions_list = []
             if message.attachments:
                 for attachment in message.attachments:
                     attachment_list.append(attachment.url)
-                print(
-                    f"{message.channel}: {rounded_date_string} {message.author}: {message.content}, attachments: {attachment_list}")
+                if message.reactions:
+                    for reaction in message.reactions:
+                        reactions_list.append(reaction.emoji)
+                    print(
+                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list} | reactions: {reactions_list}")
+                else:
+                    print(
+                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list}")
             else:
-                print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+                if message.reactions:
+                    for reaction in message.reactions:
+                        reactions_list.append(reaction.emoji)
+                    print(
+                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | reactions: {reactions_list}")
+                else:
+                    print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
         print("#####################")
 
     async def async_input(self, prompt):

@@ -52,13 +52,26 @@ class Commands:
             rounded_date = date.replace(second=0, microsecond=0)
             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             attachment_list = []
+            reactions_list = []
             if message.attachments:
                 for attachment in message.attachments:
                     attachment_list.append(attachment.url)
-                print(
-                    f"{message.channel}: {rounded_date_string} {message.author}: {message.content}, attachments: {attachment_list}")
+                if message.reactions:
+                    for reaction in message.reactions:
+                        reactions_list.append(reaction.emoji)
+                    print(
+                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list} | reactions: {reactions_list}")
+                else:
+                    print(
+                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list}")
             else:
-                print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+                if message.reactions:
+                    for reaction in message.reactions:
+                        reactions_list.append(reaction.emoji)
+                    print(
+                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | reactions: {reactions_list}")
+                else:
+                    print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
         print("#####################")
 
     async def mutechannel(self):
