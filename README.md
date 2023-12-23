@@ -5,7 +5,7 @@ a bot that allows you to track messages on connected servers and also send messa
 the program is designed for Windows OS<br>
 I recommend using Windows Terminal: https://www.microsoft.com/store/productId/9N0DX20HK701?ocid=pdpshare
 # How to use it?
-To use this program you need python preferably version 3.11<br>
+To use this program you need python preferably version 3.12<br>
 To install all the necessary modules download requirements.txt and enter the <br>`pip install -r  path/to/requirements.txt`<br>command in the console<br>
 you have to go to the website: https://discord.com/developers/applications then create your own discord bot <br>
 Next, turn on the switches under the Privileged Gateway Intents category located in the bot settings.
