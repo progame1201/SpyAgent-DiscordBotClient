@@ -102,12 +102,19 @@ class Handler:
                         self.channel = cmresult["channel"]
                         await self.get_history(channel=self.channel)
                 continue
-            await self.channel.send(senddata)
+            try:
+             await self.channel.send(senddata)
+            except Forbidden:
+                print("It's impossible to send: Forbidden.")
 
-    async def get_history(self, channel: TextChannel):
+    async def get_history(self):
         messages = []
-        async for message in channel.history(limit=config.history_size, oldest_first=False):
-            messages.append(message)
+        try:
+            async for message in self.channel.history(limit=config.history_size, oldest_first=False):
+                messages.append(message)
+        except Forbidden:
+            print(f"{Fore.RED}It's impossible to get: Forbidden.")
+            return
         print("Channel history:\n#####################")
         messages.reverse()
         for message in messages:
@@ -116,31 +123,24 @@ class Handler:
             rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             attachment_list = []
             reactions_list = []
+            msg = f"{message.channel}: {rounded_date_string} {message.author}: {message.content}"
             if message.attachments:
                 for attachment in message.attachments:
                     attachment_list.append(attachment.url)
-                if message.reactions:
-                    for reaction in message.reactions:
-                        reactions_list.append(reaction.emoji)
-                    print(
-                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list} | reactions: {reactions_list}")
-                else:
-                    print(
-                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list}")
-            else:
-                if message.reactions:
-                    for reaction in message.reactions:
-                        reactions_list.append(reaction.emoji)
-                    print(
-                        f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | reactions: {reactions_list}")
-                else:
-                    print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+                msg += f" | attachments: {attachment_list}"
+
+            if message.reactions:
+                for reaction in message.reactions:
+                    reactions_list.append(reaction.emoji)
+                msg += f" | reactions: {reactions_list}"
+            print(msg)
+
         print("#####################")
 
     async def async_input(self, prompt):
         return await asyncio.to_thread(input, prompt)
 if __name__ == "__main__":
-    logger.info("❄Spy Agent Private Messages 1.0.0❄, 2023, progame1201")
+    logger.info("❄Spy Agent Private Messages 1.1.0❄, 2023-2024, progame1201")
     client = disnake.Client(intents=Intents.all())
     userid = int(input("user id: "))
     @client.event

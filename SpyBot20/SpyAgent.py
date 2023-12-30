@@ -11,7 +11,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("❄Spy Agent 2.3.1❄, 2023, progame1201")
+logger.info("❄Spy Agent 2.4.0❄, 2023-2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -182,12 +182,19 @@ async def chatting():
        if "guild" in list(cmresult.keys()):
            guild = cmresult["guild"]
     continue
-   await channel.send(senddata)
+   try:
+     await channel.send(senddata)
+   except Forbidden:
+       print(f"{Fore.RED}It's impossible to send: Forbidden.")
 
 async def get_history(channel:TextChannel):
   messages = []
-  async for message in channel.history(limit=config.history_size, oldest_first=False):
+  try:
+   async for message in channel.history(limit=config.history_size, oldest_first=False):
     messages.append(message)
+  except Forbidden:
+      print(f"{Fore.RED}It's impossible to get: Forbidden.")
+      return
   print("Channel history:\n#####################")
   messages.reverse()
   for message in messages:
@@ -196,22 +203,18 @@ async def get_history(channel:TextChannel):
     rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
     attachment_list = []
     reactions_list = []
+    msg = f"{message.channel}: {rounded_date_string} {message.author}: {message.content}"
     if message.attachments:
         for attachment in message.attachments:
             attachment_list.append(attachment.url)
-        if message.reactions:
-            for reaction in message.reactions:
-              reactions_list.append(reaction.emoji)
-            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list} | reactions: {reactions_list}")
-        else:
-            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | attachments: {attachment_list}")
-    else:
-        if message.reactions:
-            for reaction in message.reactions:
-              reactions_list.append(reaction.emoji)
-            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content} | reactions: {reactions_list}")
-        else:
-            print(f"{message.channel}: {rounded_date_string} {message.author}: {message.content}")
+        msg +=f" | attachments: {attachment_list}"
+
+    if message.reactions:
+        for reaction in message.reactions:
+            reactions_list.append(reaction.emoji)
+        msg += f" | reactions: {reactions_list}"
+    print(msg)
+
   print("#####################")
 async def async_input(prompt):
     return await asyncio.to_thread(input, prompt)
