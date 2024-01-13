@@ -12,7 +12,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.5.0, 2024, progame1201")
+logger.info("Spy Agent 2.5.1, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -131,30 +131,27 @@ async def receive_messages():
       rounded_date = date.replace(second=0, microsecond=0)
       rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
       if isinstance(message.channel, DMChannel):
-       if config.allow_private_messages:
+        if config.allow_private_messages:
           msg = f"Private message: {message.channel}: {rounded_date_string} ({message.author.id})"
-       else:
+        else:
            continue
       else:
-        if check_file_integrity("guildmutes") or check_file_integrity("channelmutes"):
+
+       if check_file_integrity("guildmutes") or check_file_integrity("channelmutes"):
          lastmutes = await getmutes()
          channels_mute_list = lastmutes[0]
          guild_mute_list = lastmutes[1]
 
-      if message.channel.id in channels_mute_list:
+       if message.channel.id in channels_mute_list:
          if message.channel.id != channel.id:
           continue
-      if message.guild.id in guild_mute_list:
+       if message.guild.id in guild_mute_list:
          if message.guild.id != guild.id:
           continue
       attachment_list = []
 
       msg = f"{message.guild}: {message.channel}: {rounded_date_string}"
-      if isinstance(message.channel, DMChannel):
-       if config.allow_private_messages:
-          msg = f"Private message: {message.channel}: {rounded_date_string} ({message.author.id})"
-       else:
-           continue
+
       if config.display_users_avatars_urls:
           msg += f" ({message.author.avatar.url}) {message.author.name}: {message.content}"
       else:
