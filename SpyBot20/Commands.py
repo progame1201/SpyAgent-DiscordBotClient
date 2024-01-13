@@ -10,10 +10,11 @@ from tkinter import filedialog
 from colorama import Fore, init
 
 class Commands:
-    '''All commands of SpyAgent 2.1.0+
+    '''All commands of SpyAgent 2.6.0+
+       most of the commands were taken from version 1.0.0, which is why their code maybe bad.
     '''
     def __init__(self, client=None, guild=None, channel=None):
-        self.client = client
+        self.client:Client = client
         self.channel:TextChannel = channel
         self.guild = guild
         init(autoreset=True)
@@ -113,15 +114,14 @@ class Commands:
         async for message in self.channel.history(limit=config.history_size, oldest_first=False):
             messages.append(message)
         messages.reverse()
-        i = 0
-        for message in messages:
+
+        for i, message in enumerate(messages):
             if message.author.id == self.client.user.id:
                 yourmessages[i] = message
                 date = message.created_at
                 rounded_date = date.replace(second=0, microsecond=0)
                 rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
                 print(f"{i}: {message.channel}: {rounded_date_string} {message.author}: {message.content}")
-                i += 1
         data = await self.async_input("message index:")
         if data == "" or data == None:
             return
@@ -148,9 +148,9 @@ class Commands:
             return
         channel = self.client.get_channel(list(channels.get(int(data)).values())[0])
         logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
-        await self.get_history()
         self.channel = channel
         self.guild = guild
+        await self.get_history()
         return {"channel":channel,"guild":guild}
     async def resetchannel(self):
         print("Choose a channel:")
@@ -163,9 +163,14 @@ class Commands:
             return
         channel = self.client.get_channel(list(channels.get(int(data)).values())[0])
         logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
-        await self.get_history()
         self.channel = channel
+        await self.get_history()
         return {"channel":channel}
+    async def into(self):
+        id = await self.async_input("channel id:")
+        channel = self.client.get_channel(int(id))
+        await channel.send(await self.async_input("message:"))
+
     async def file(self):
         try:
             file = filedialog.askopenfilename()
@@ -291,15 +296,13 @@ class Commands:
         async for message in self.channel.history(limit=config.history_size, oldest_first=False):
             messages.append(message)
         messages.reverse()
-        i = 0
-        for message in messages:
+        for i, message in enumerate(messages):
             if message.author.id == self.client.user.id:
                 yourmessages[i] = message
                 date = message.created_at
-                rounded_date = date.replace(second=0, microsecond=0)
-                rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+                rounded_date_string = date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
                 print(f"{i}: {message.channel}: {rounded_date_string} {message.author}: {message.content}")
-                i += 1
+
         data = await self.async_input("message index:")
         if data == "" or data == None:
             return
@@ -308,4 +311,8 @@ class Commands:
         data = await self.async_input("new message:")
         await edmsg.edit(content=data)
         logger.success(f"Message: {oldcont} | edited to: {data}")
-
+    async def set(self):
+        id = await self.async_input("channel id:")
+        self.channel = self.client.get_channel(int(id))
+        await self.get_history()
+        return {"channel": self.channel}

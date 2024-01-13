@@ -29,15 +29,18 @@ class Handler:
                     date = message.created_at
                     rounded_date = date.replace(second=0, microsecond=0)
                     rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+                    msg = f"{message.channel}: {rounded_date_string}"
+                    if config.display_users_avatars_urls:
+                        msg += f" ({message.author.avatar.url}) {message.author.name}: {message.content}"
+                    else:
+                        msg += f" {message.author.name}: {message.content}"
+
                     if message.attachments:
                         for attachment in message.attachments:
                             attachment_list.append(attachment.url)
-                        if config.display_users_avatars_urls:
-                           print(f'\n{message.channel}: {rounded_date_string} ({message.author.avatar.url}) ({message.author.id}) {message.author.name}: {message.content}, attachments: {attachment_list}')
-                        else:
-                            print(f'\n{message.channel}: {rounded_date_string} ({message.author.id}) {message.author.name}: {message.content}, attachments: {attachment_list}')
-                    else:
-                        print(f'\n{message.channel}: {rounded_date_string} ({message.author.id}) {message.author.name}: {message.content}')
+                        msg += f" | attachments: {attachment_list}"
+
+                    print(msg)
                     if config.notification == True:
                      if message.author.id != client.user.id:
                       winsound.Beep(500, 100)
@@ -90,7 +93,7 @@ class Handler:
         cm.new(command_name="***edit", func=cmnds.edit)
         print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}")
         logger.success("Command manager started!")
-        await self.get_history(channel=self.channel)
+        await self.get_history()
         while True:
             await sleep(1)
             senddata = await self.async_input(f"{Fore.LIGHTBLACK_EX}Message to {self.channel.name}:\n{Fore.RESET}")
@@ -140,7 +143,7 @@ class Handler:
     async def async_input(self, prompt):
         return await asyncio.to_thread(input, prompt)
 if __name__ == "__main__":
-    logger.info("❄Spy Agent Private Messages 1.1.0❄, 2023-2024, progame1201")
+    logger.info("Spy Agent Private Messages 1.2.0, 2024, progame1201")
     client = disnake.Client(intents=Intents.all())
     userid = int(input("user id: "))
     @client.event
