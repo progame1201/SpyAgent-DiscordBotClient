@@ -4,6 +4,7 @@ from loguru import logger
 import asyncio
 import winsound
 import pickle
+import hashlib
 import os
 import pytz
 from asyncio import sleep
@@ -11,7 +12,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("❄Spy Agent 2.4.0❄, 2023-2024, progame1201")
+logger.info("Spy Agent 2.5.0, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -37,32 +38,45 @@ async def getmutes():
         open("guildmutes", 'wb').close()
         guild_mute_list = []
     return [channels_mute_list, guild_mute_list]
+def calculate_file_hash(file_path):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as file:
+        for byte_block in iter(lambda: file.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+def check_file_integrity(file_path):
+    global hashes
+    current_hash = calculate_file_hash(file_path)
+    if current_hash in hashes:
+        return False
+    else:
+        hashes = [calculate_file_hash("guildmutes"), calculate_file_hash("channelmutes")]
+        return True
 
 @client.event
 async def on_ready():
-  global guild
-  global channel
-  logger.info(f"Welcome {client.user.name}! Bot ID: {client.user.id}")
-  await sleep(1)
-  print("Choose a server:")
-  for i, guild in enumerate(client.guilds):
-      print(f"{i}: {guild.name}")
-  data = await async_input("server index:")
-  guild = client.guilds[int(data)]
-  logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id} guild icon url: {guild.icon.url}")
-  await sleep(1)
-  print("Choose channel:")
-  channels: dict[int, dict[str:int]] = {}
-  for i, channel in enumerate(guild.text_channels):
-      channels.update({i: {channel.name: channel.id}})
-      print(f"{i}: {channel.name}")
-  data = await async_input("server index:")
-  channel = client.get_channel(list(channels.get(int(data)).values())[0])
-  logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
-  await get_history(channel)
-  asyncio.run_coroutine_threadsafe(receive_messages(), client.loop)
-  asyncio.run_coroutine_threadsafe(chatting(), client.loop)
-  asyncio.run_coroutine_threadsafe(detector(), client.loop)
+    global guild
+    global channel
+    logger.info(f"Welcome {client.user.name}! Bot ID: {client.user.id}")
+    await sleep(1)
+    print("Choose a server:")
+    for i, guild in enumerate(client.guilds):
+        print(f"{i}: {guild.name}")
+    data = await async_input("server index:")
+    guild = client.guilds[int(data)]
+    logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id} guild icon url: {guild.icon.url}")
+    await sleep(1)
+    print("Choose channel:")
+    channels: dict[int, dict[str:int]] = {}
+    for i, channel in enumerate(guild.text_channels):
+        channels.update({i: {channel.name: channel.id}})
+        print(f"{i}: {channel.name}")
+    data = await async_input("server index:")
+    channel = client.get_channel(list(channels.get(int(data)).values())[0])
+    logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
+    asyncio.run_coroutine_threadsafe(receive_messages(), client.loop)
+    asyncio.run_coroutine_threadsafe(chatting(), client.loop)
+    asyncio.run_coroutine_threadsafe(detector(), client.loop)
 
 
 async def detector():
@@ -106,45 +120,56 @@ async def detector():
 async def receive_messages():
     global channel
     global guild
+    global hashes
+    lastmutes:list = await getmutes()
+    channels_mute_list = lastmutes[0]
+    guild_mute_list = lastmutes[1]
+    hashes = [calculate_file_hash("guildmutes"), calculate_file_hash("channelmutes")]
     while True:
-      attachment_list = []
       message:Message = await client.wait_for('message')
+      date = message.created_at
+      rounded_date = date.replace(second=0, microsecond=0)
+      rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
       if isinstance(message.channel, DMChannel):
-       if config.allow_private_messages == True:
-        print(f'\nPrivate message: {message.channel}: ({message.author.id}) {message.author.name}: {message.content}')
-       continue
-      muteslist = await getmutes()
-      channels_mute_list = muteslist[0]
-      guild_mute_list = muteslist[1]
+       if config.allow_private_messages:
+          msg = f"Private message: {message.channel}: {rounded_date_string} ({message.author.id})"
+       else:
+           continue
+      else:
+        if check_file_integrity("guildmutes") or check_file_integrity("channelmutes"):
+         lastmutes = await getmutes()
+         channels_mute_list = lastmutes[0]
+         guild_mute_list = lastmutes[1]
+
       if message.channel.id in channels_mute_list:
-        if message.channel.id != channel.id:
+         if message.channel.id != channel.id:
           continue
       if message.guild.id in guild_mute_list:
-        if message.guild.id != guild.id:
+         if message.guild.id != guild.id:
           continue
-      if message.attachments:
-        for attachment in message.attachments:
-          attachment_list.append(attachment.url)
-        date = message.created_at
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-        if config.display_users_avatars_urls:
-            print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} ({message.author.avatar.url}) {message.author.name}: {message.content}, attachments: {attachment_list}')
-        else:
-            print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}, attachments: {attachment_list}')
+      attachment_list = []
+
+      msg = f"{message.guild}: {message.channel}: {rounded_date_string}"
+      if isinstance(message.channel, DMChannel):
+       if config.allow_private_messages:
+          msg = f"Private message: {message.channel}: {rounded_date_string} ({message.author.id})"
+       else:
+           continue
+      if config.display_users_avatars_urls:
+          msg += f" ({message.author.avatar.url}) {message.author.name}: {message.content}"
       else:
-        date = message.created_at
-        rounded_date = date.replace(second=0, microsecond=0)
-        rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
-        if config.display_users_avatars_urls:
-          print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} ({message.author.avatar.url}) {message.author.name}: {message.content}')
-        else:
-          print(f'\n{message.guild.name}: {message.channel.name}: {rounded_date_string} {message.author.name}: {message.content}')
+          msg += f" {message.author.name}: {message.content}"
+
+      if message.attachments:
+          for attachment in message.attachments:
+              attachment_list.append(attachment.url)
+          msg += f" | attachments: {attachment_list}"
+
+      print(f"{msg}\n")
       if config.notification == True:
         if message.author.id != client.user.id:
           winsound.Beep(500, 100)
           winsound.Beep(1000, 100)
-
 
 async def chatting():
  global guild
@@ -167,6 +192,8 @@ async def chatting():
  cm.new(command_name="***edit", func=cmnds.edit)
  print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}type ***help to get more info!")
  logger.success("Command manager started!")
+ await sleep(2)
+ await get_history(channel)
  while True:
    await sleep(1)
    senddata = await async_input(f"{Fore.LIGHTBLACK_EX}Message to {guild.name}: {channel.name}:\n{Fore.RESET}")
