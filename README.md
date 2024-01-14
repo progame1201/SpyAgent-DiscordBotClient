@@ -31,7 +31,9 @@ __All commands work with the prefix ***<br>__
 + gethistory - Get the history of the channel you are on<br>
 + delete - delete a message<br>
 + privatemsg - Send a private message to the user<br>
-+ edit - Edit the message
++ edit - Edit the message<br>
++ into - send a message to any channel (by ID)<br>
++ set - set the channel (by ID)
 
 ### **commands in private messages:**<br>
 
