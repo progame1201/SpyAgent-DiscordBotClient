@@ -34,8 +34,9 @@ __All commands work with the prefix ***<br>__
 + edit - Edit the message<br>
 + into - send a message to any channel (by ID)<br>
 + set - set the channel (by ID)
++ ***setuser - It works as a SpyAgentPM setting the user as a channel<br>
 
-### **commands in private messages:**<br>
+### **commands in private messages:** work in SpyAgentPM<br>
 
 + reset - Gives you the opportunity to re-select the channel and server <br>
 + file - Allows you to send any file <br>
