@@ -53,9 +53,7 @@ class Commands:
         print("Channel history:\n#####################")
         messages.reverse()
         for message in messages:
-            date = message.created_at
-            rounded_date = date.replace(second=0, microsecond=0)
-            rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+            rounded_date_string = message.created_at.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             attachment_list = []
             reactions_list = []
             msg = f"{message.channel}: {rounded_date_string} {message.author}: {message.content}"
@@ -84,10 +82,9 @@ class Commands:
         mutechanelname = await self.async_input("type chanel index: ")
         try:
             mchannel = self.client.get_channel(channellistformute[int(mutechanelname)])
-            channels_mute_list.append(channellistformute[int(mutechanelname)])
+            channels_mute_list.append(mchannel.id)
             with open('channelmutes', 'wb') as f:
-                towrite = pickle.dumps(channels_mute_list)
-                f.write(towrite)
+                f.write(pickle.dumps(channels_mute_list))
             logger.success(f"Channel '{mchannel.name}' muted")
         except Exception as e:
             print(f"index not found\n{e}")
@@ -96,15 +93,14 @@ class Commands:
         channels_mute_list = self.getmutes()[0]
         for i in range(len(channels_mute_list)):
             unmutech = self.client.get_channel(channels_mute_list[i])
-            channellistforunmute.append(channels_mute_list[i])
-            print(f"{i}: {unmutech}")
+            channellistforunmute.append(unmutech.id)
+            print(f"{i}: {unmutech.name}")
         unmutechanelname = await self.async_input("type chanel index: ")
         try:
             mchannel = self.client.get_channel(channellistforunmute[int(unmutechanelname)])
-            channels_mute_list.remove(channellistforunmute[int(unmutechanelname)])
+            channels_mute_list.remove(mchannel.id)
             with open('channelmutes', 'wb') as f:
-                towrite = pickle.dumps(channels_mute_list)
-                f.write(towrite)
+                f.write(pickle.dumps(channels_mute_list))
             logger.success(f"Channel '{mchannel.name}' unmuted")
         except Exception as e:
             print(f"index not found\n{e}")
@@ -118,9 +114,7 @@ class Commands:
         for i, message in enumerate(messages):
             if message.author.id == self.client.user.id:
                 yourmessages[i] = message
-                date = message.created_at
-                rounded_date = date.replace(second=0, microsecond=0)
-                rounded_date_string = rounded_date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+                rounded_date_string = message.created_at.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
                 print(f"{i}: {message.channel}: {rounded_date_string} {message.author}: {message.content}")
         data = await self.async_input("message index:")
         if data == "" or data == None:
@@ -178,15 +172,13 @@ class Commands:
         except Exception as e:
             print(f"error sending file\n{e}")
     async def status(self):
-        print("status list:\nonline\noffline\nidle")
+        statuses:dict = {"online":Status.online,"offline":Status.offline, "idle":Status.idle}
+        print("statuses:")
+        for key in statuses.keys():
+            print(key)
         status = input("status:")
-        if status == "online":
-            await self.client.change_presence(status=Status.online)
-        if status == "offline":
-            await self.client.change_presence(status=Status.offline)
-        if status == "idle":
-            await self.client.change_presence(status=Status.idle)
-        if status == "online" or status == "offline" or status == "idle":
+        if status in statuses.keys():
+            await self.client.change_presence(status=statuses[status])
             logger.success(f"status changed to {status}")
     async def guildmute(self):
         guildlistformute = []
@@ -202,8 +194,7 @@ class Commands:
             mguild = self.client.get_guild(guildlistformute[int(muteguildname)])
             guild_mute_list.append(mguild.id)
             with open('guildmutes', 'wb') as f:
-                towrite = pickle.dumps(guild_mute_list)
-                f.write(towrite)
+                f.write(pickle.dumps(guild_mute_list))
             logger.success(f"Guild '{mguild.name}' muted")
         except Exception as e:
             print(f"index not found\n{e}")
@@ -212,15 +203,14 @@ class Commands:
         guild_mute_list = self.getmutes()[1]
         for i in range(len(guild_mute_list)):
             unmuteg = self.client.get_guild(guild_mute_list[i])
-            guildlistforunmute.append(guild_mute_list[i])
+            guildlistforunmute.append(unmuteg.id)
             print(f"{i}: {unmuteg}")
         unmutechanelname = await self.async_input("type guild index: ")
         try:
             mguild = self.client.get_guild(guildlistforunmute[int(unmutechanelname)])
             guild_mute_list.remove(mguild.id)
             with open('guildmutes', 'wb') as f:
-                towrite = pickle.dumps(guild_mute_list)
-                f.write(towrite)
+                f.write(pickle.dumps(guild_mute_list))
             logger.success(f"Guild '{mguild.name}' unmuted")
         except Exception as e:
             print(f"index not found\n{e}")
@@ -238,41 +228,22 @@ class Commands:
                 emoji = emojilist[int(reactemoji)]
             except:
                 return
-            print("1 - message id")
-            print("2 - message list")
-            messageinput = await self.async_input("type number:")
-            if messageinput == "2":
-                messages = []
-                async for message in self.channel.history(limit=50, oldest_first=False):
-                    messages.append(message)
-                messages.reverse()
-                for i, message in enumerate(messages):
-                    print(f"{i}: {message.author}: {message.content}")
-                messageindex = await self.async_input("message index:")
-                message = messages[int(messageindex)]
-                await message.add_reaction(emoji)
-                logger.success(f"message reacted. Emoji: {emoji}")
-            if messageinput == "1":
-                messageid = int(await self.async_input("message id: "))
-                message = await self.channel.fetch_message(int(messageid))
-                await message.add_reaction(emoji)
-                logger.success(f"message reacted. Emoji: {emoji}")
         if emojiinput == "2":
             emoji = await self.async_input("emoji: ")
-            print("1 - message id")
-            print("2 - message list")
-            messageinput = await self.async_input("type number:")
-            if messageinput == "2":
-                messages = []
-                async for message in self.channel.history(limit=50, oldest_first=False):
-                    messages.append(message)
-                messages.reverse()
-                for i, message in enumerate(messages):
-                    print(f"{i}: {message.author}: {message.content}")
-                messageindex = await self.async_input("message index:")
-                message = messages[int(messageindex)]
-                await message.add_reaction(emoji)
-                logger.success(f"message reacted. Emoji: {emoji}")
+        print("1 - message id")
+        print("2 - message list")
+        messageinput = await self.async_input("type number:")
+        if messageinput == "2":
+            messages = []
+            async for message in self.channel.history(limit=50, oldest_first=False):
+                messages.append(message)
+            messages.reverse()
+            for i, message in enumerate(messages):
+                print(f"{i}: {message.author}: {message.content}")
+            messageindex = await self.async_input("message index:")
+            message = messages[int(messageindex)]
+            await message.add_reaction(emoji)
+            logger.success(f"message reacted. Emoji: {emoji}")
             if messageinput == "1":
              messageid = int(await self.async_input("message id: ") )
              message = await self.channel.fetch_message(int(messageid))
@@ -285,11 +256,12 @@ class Commands:
         user:User = self.client.get_user(usrid)
         msg = await self.async_input(f"{Fore.LIGHTBLACK_EX}Message to {user.name}:")
         await user.send(msg)
-    async def pmreset(self):
+
+    async def setuser(self):
         usrid = int(await self.async_input("user id:"))
         user: User = self.client.get_user(usrid)
         self.channel = user
-        return {"channel":user}
+        return {"channel":user, "guild":None}
     async def edit(self):
         messages = []
         yourmessages: dict[int:Message] = {}
@@ -299,8 +271,7 @@ class Commands:
         for i, message in enumerate(messages):
             if message.author.id == self.client.user.id:
                 yourmessages[i] = message
-                date = message.created_at
-                rounded_date_string = date.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
+                rounded_date_string = message.created_at.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
                 print(f"{i}: {message.channel}: {rounded_date_string} {message.author}: {message.content}")
 
         data = await self.async_input("message index:")

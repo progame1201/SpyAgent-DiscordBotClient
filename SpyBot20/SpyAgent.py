@@ -12,7 +12,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.6.0, 2024, progame1201")
+logger.info("Spy Agent 2.7.0, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -41,7 +41,7 @@ async def getmutes():
 def calculate_file_hash(file_path):
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as file:
-        for byte_block in iter(lambda: file.read(4096), b""):
+        for byte_block in iter(lambda: file.read(), b""):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 def check_file_integrity(file_path):
@@ -194,15 +194,16 @@ async def chatting():
  cm.new(command_name="***edit", func=cmnds.edit)
  cm.new(command_name="***into", func=cmnds.into)
  cm.new(command_name="***set", func=cmnds.set)
+ cm.new(command_name="***setuser", func=cmnds.setuser)
  print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}type ***help to get more info!")
  logger.success("Command manager started!")
  await sleep(2)
  await get_history(channel)
  while True:
    await sleep(1)
-   senddata = await async_input(f"{Fore.LIGHTBLACK_EX}Message to {guild.name}: {channel.name}:\n{Fore.RESET}")
+   senddata = await async_input(f"{Fore.LIGHTBLACK_EX}Message to {channel.name}:\n{Fore.RESET}")
    if senddata.lower() == "***help":
-       print("#####HELP#####\n***Mute - mute any channel\n***Unmute - unmute any channel\n***Delete - delete any message you have selected\n***Reset - Re-select the guild and channel for communication\n***Resetchannel - Re-select a channel for communication\n***File - send a file\n***Muteguild - mute any guild\n***Unmuteguild - unmute any guild\n***Reaction - react any message\n***Privatemsg - Send a private message to the user\n***Gethistory - Get the history of the channel you are on\ninto - send a message to any channel (by ID)\nset - set the channel (by ID)\n#####INFO#####\nall messages are written in the format: guild: channel: author: message\n##############")
+       print("#####HELP#####\n***Mute - mute any channel\n***Unmute - unmute any channel\n***Delete - delete any message you have selected\n***Reset - Re-select the guild and channel for communication\n***Resetchannel - Re-select a channel for communication\n***File - send a file\n***Muteguild - mute any guild\n***Unmuteguild - unmute any guild\n***Reaction - react any message\n***Privatemsg - Send a private message to the user\n***Gethistory - Get the history of the channel you are on\ninto - send a message to any channel (by ID)\nset - set the channel (by ID)\n***setuser - It works as a Spy Agent PM setting the user as a channel\n#####INFO#####\nall messages are written in the format: guild: channel: author: message\n##############")
        continue
 
    cmresult = cm.execute(senddata)
@@ -212,7 +213,8 @@ async def chatting():
       if "channel" in list(cmresult.keys()):
         channel = cmresult["channel"]
       if "guild" in list(cmresult.keys()):
-        guild = cmresult["guild"]
+         if cmresult["guild"] != None:
+             guild = cmresult["guild"]
     continue
 
    try:
