@@ -17,6 +17,7 @@ class Commands:
         self.client:Client = client
         self.channel:TextChannel = channel
         self.guild = guild
+        self.vcchlients:list[VoiceClient] = []
         init(autoreset=True)
     def getmutes(self):
         if os.path.exists("channelmutes"):
@@ -319,6 +320,23 @@ class Commands:
             return
         await replymessages[id].reply(await self.async_input("message:"))
     async def vcpaly(self):
+        for i, client in enumerate(self.vcchlients):
+            print(f"{i}:{client.channel.name}")
+        id = await self.async_input("channel index:")
+        vcch = self.vcchlients[int(id)]
+        path = filedialog.askopenfilename()
+        if path == "" or path == None or path == " ":
+            return
+        source = FFmpegPCMAudio(path)
+        vcch.play(source, after=self.VC_after_playing)
+        logger.success("Audio playback has started")
+
+    def VC_after_playing(self, error):
+        if error:
+            pass
+        else:
+            logger.info("Audio has finished playing")
+    async def vcconnect(self):
         print("Choose a channel:")
         channels: dict[int, dict[str:int]] = {}
         for i, channel in enumerate(self.guild.voice_channels):
@@ -328,28 +346,30 @@ class Commands:
         if data == "" or data == None:
             return
         try:
-         vcchannel:VoiceChannel = self.client.get_channel(list(channels.get(int(data)).values())[0])
-         for client in self.client.voice_clients:
-            if client.guild.id == vcchannel.guild.id:
-                await client.disconnect()
-         logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
-         vcch:VoiceClient = await vcchannel.connect(timeout=5)
+            vcchannel:VoiceChannel = self.client.get_channel(list(channels.get(int(data)).values())[0])
+            for client in self.client.voice_clients:
+                if client.channel.guild.id == vcchannel.guild.id:
+                    await client.disconnect()
+            self.vcchlients.append(await vcchannel.connect(timeout=5))
+            logger.success(f"connected! channel name {vcchannel.name}, channel id: {vcchannel.id}")
+            return
         except Forbidden:
             logger.error(f"{Fore.RED}It's impossible to connect: Forbidden.")
             return
-        path = filedialog.askopenfilename()
-        if path == "" or path == None or path == " ":
-            return
-        source = FFmpegPCMAudio(path)
-        vcch.play(source)
-        logger.success("Audio playback has started")
-    async def VC_play(self, source, vcch):
-        vcch.play(source)
-    async def vcstop(self):
+    async def vcdisconnect(self):
         for i, client in enumerate(self.client.voice_clients):
             print(f"{i}:{client.channel.name}")
         id = await self.async_input("channel index:")
         await self.client.voice_clients[int(id)].disconnect()
         logger.success("Disconnected")
+    async def vcstop(self):
+        for i, client in enumerate(self.vcchlients):
+            print(f"{i}:{client.channel.name}")
+        id = await self.async_input("channel index:")
+        try:
+         self.vcchlients[int(id)].source.cleanup()
+        except:
+            pass
+        logger.success("Stoped playing.")
 
 
