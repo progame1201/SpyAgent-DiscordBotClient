@@ -12,7 +12,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.7.0, 2024, progame1201")
+logger.info("Spy Agent 2.8.0, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -109,7 +109,7 @@ async def detector():
         while True:
           before, after = await client.wait_for("message_edit")
           if channel.id == after.channel.id:
-           print(f"Message: {before.content} | has been changed to: {after.content} |in: {after.guild}: {after.channel}: {after.author}\n")
+           print(f"Message: {before.content} | has been changed to: {after.content} | in: {after.guild}: {after.channel}: {after.author}\n")
 
     async def guild_remove():
         while True:
@@ -166,13 +166,16 @@ async def receive_messages():
           for attachment in message.attachments:
               attachment_list.append(attachment.url)
           msg += f" | attachments: {attachment_list}"
+      if message.reference:
+          if config.allow_reference_display:
+           reference = await message.channel.fetch_message(message.reference.message_id)
+           msg += f" | reference: {reference.author.name}: {reference.content}"
 
       print(f"{msg}\n")
       if config.notification == True:
         if message.author.id != client.user.id:
-          winsound.Beep(500, 100)
-          winsound.Beep(1000, 100)
-
+           winsound.Beep(500, 100)
+           winsound.Beep(1000, 100)
 async def chatting():
  global guild
  global channel
@@ -195,6 +198,9 @@ async def chatting():
  cm.new(command_name="***into", func=cmnds.into)
  cm.new(command_name="***set", func=cmnds.set)
  cm.new(command_name="***setuser", func=cmnds.setuser)
+ cm.new(command_name="***reply", func=cmnds.reply)
+ cm.new(command_name="***vcplay", func=cmnds.vcpaly)
+ cm.new(command_name="***vcstop", func=cmnds.vcstop)
  print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}type ***help to get more info!")
  logger.success("Command manager started!")
  await sleep(2)
@@ -213,8 +219,7 @@ async def chatting():
       if "channel" in list(cmresult.keys()):
         channel = cmresult["channel"]
       if "guild" in list(cmresult.keys()):
-         if cmresult["guild"] != None:
-             guild = cmresult["guild"]
+        guild = cmresult["guild"]
     continue
 
    try:
@@ -247,10 +252,15 @@ async def get_history(channel:TextChannel):
         for reaction in message.reactions:
             reactions_list.append(reaction.emoji)
         msg += f" | reactions: {reactions_list}"
+    if config.allow_reference_display:
+     if message.reference and message.reference.message_id:
+        reference = await message.channel.fetch_message(message.reference.message_id)
+        msg += f" | reference: reply: {reference.author.name}: {reference.content}"
     print(msg)
 
   print("#####################")
 async def async_input(prompt):
     return await asyncio.to_thread(input, prompt)
+
 
 client.run(config.Token)

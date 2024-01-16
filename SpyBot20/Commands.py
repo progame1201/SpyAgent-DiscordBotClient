@@ -10,8 +10,8 @@ from tkinter import filedialog
 from colorama import Fore, init
 
 class Commands:
-    '''All commands of SpyAgent 2.6.0+
-       most of the commands were taken from version 1.0.0, which is why their code maybe bad.
+    '''All commands of SpyAgent 2.8.0+
+       most of the commands were taken from version 1.0.0-2.0.0, which is why their code maybe bad.
     '''
     def __init__(self, client=None, guild=None, channel=None):
         self.client:Client = client
@@ -41,17 +41,21 @@ class Commands:
         return [channels_mute_list, guild_mute_list]
     async def async_input(self, prompt):
         return await asyncio.to_thread(input, prompt)
-
-    async def get_history(self):
+    async def raw_history(self):
         messages = []
         try:
             async for message in self.channel.history(limit=config.history_size, oldest_first=False):
                 messages.append(message)
         except Forbidden:
             print(f"{Fore.RED}It's impossible to get: Forbidden.")
+            return False
+        messages.reverse()
+        return messages
+    async def get_history(self):
+        messages = await self.raw_history()
+        if messages == False:
             return
         print("Channel history:\n#####################")
-        messages.reverse()
         for message in messages:
             rounded_date_string = message.created_at.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
             attachment_list = []
@@ -66,6 +70,10 @@ class Commands:
                 for reaction in message.reactions:
                     reactions_list.append(reaction.emoji)
                 msg += f" | reactions: {reactions_list}"
+            if config.allow_reference_display:
+                if message.reference and message.reference.message_id:
+                    reference = await message.channel.fetch_message(message.reference.message_id)
+                    msg += f" | reference: reply: {reference.author.name}: {reference.content}"
             print(msg)
 
         print("#####################")
@@ -105,11 +113,10 @@ class Commands:
         except Exception as e:
             print(f"index not found\n{e}")
     async def delete(self):
-        messages = []
+        messages = await self.raw_history()
+        if messages == False:
+            return
         yourmessages: dict[int:Message] = {}
-        async for message in self.channel.history(limit=config.history_size, oldest_first=False):
-            messages.append(message)
-        messages.reverse()
 
         for i, message in enumerate(messages):
             if message.author.id == self.client.user.id:
@@ -234,10 +241,9 @@ class Commands:
         print("2 - message list")
         messageinput = await self.async_input("type number:")
         if messageinput == "2":
-            messages = []
-            async for message in self.channel.history(limit=50, oldest_first=False):
-                messages.append(message)
-            messages.reverse()
+            messages = await self.raw_history()
+            if messages == False:
+                return
             for i, message in enumerate(messages):
                 print(f"{i}: {message.author}: {message.content}")
             messageindex = await self.async_input("message index:")
@@ -259,15 +265,28 @@ class Commands:
 
     async def setuser(self):
         usrid = int(await self.async_input("user id:"))
+        print("checking availability...")
+        sure = False
+        for user in self.client.users:
+            if user.id == usrid:
+                sure = True
+                break
+        if sure == False:
+           allowed = await self.async_input("the user was not found in the list of users. Continue? [y / n]")
+           if allowed.lower() != "y":
+            return
+        else:
+            print("User has been found")
         user: User = self.client.get_user(usrid)
         self.channel = user
-        return {"channel":user, "guild":None}
+        await self.get_history()
+        return {"channel":user}
     async def edit(self):
-        messages = []
+        messages = await self.raw_history()
+        if messages == False:
+            return
         yourmessages: dict[int:Message] = {}
-        async for message in self.channel.history(limit=config.history_size, oldest_first=False):
-            messages.append(message)
-        messages.reverse()
+
         for i, message in enumerate(messages):
             if message.author.id == self.client.user.id:
                 yourmessages[i] = message
@@ -287,3 +306,50 @@ class Commands:
         self.channel = self.client.get_channel(int(id))
         await self.get_history()
         return {"channel": self.channel}
+    async def reply(self):
+        messages = await self.raw_history()
+        replymessages:dict[int,Message] = {}
+        if messages == False:
+            return
+        for i, msg in enumerate(messages):
+            replymessages[i] = msg
+            print(f"{i}: {msg.channel}: {msg.author}: {msg.content}")
+        id = int(await self.async_input("message index:"))
+        if id < 0:
+            return
+        await replymessages[id].reply(await self.async_input("message:"))
+    async def vcpaly(self):
+        print("Choose a channel:")
+        channels: dict[int, dict[str:int]] = {}
+        for i, channel in enumerate(self.guild.voice_channels):
+            channels.update({i: {channel.name: channel.id}})
+            print(f"{i}: {channel.name}")
+        data = await self.async_input("channel index:")
+        if data == "" or data == None:
+            return
+        try:
+         vcchannel:VoiceChannel = self.client.get_channel(list(channels.get(int(data)).values())[0])
+         for client in self.client.voice_clients:
+            if client.guild.id == vcchannel.guild.id:
+                await client.disconnect()
+         logger.success(f"channel assigned! channel name {channel.name}, channel id: {channel.id}")
+         vcch:VoiceClient = await vcchannel.connect(timeout=5)
+        except Forbidden:
+            logger.error(f"{Fore.RED}It's impossible to connect: Forbidden.")
+            return
+        path = filedialog.askopenfilename()
+        if path == "" or path == None or path == " ":
+            return
+        source = FFmpegPCMAudio(path)
+        vcch.play(source)
+        logger.success("Audio playback has started")
+    async def VC_play(self, source, vcch):
+        vcch.play(source)
+    async def vcstop(self):
+        for i, client in enumerate(self.client.voice_clients):
+            print(f"{i}:{client.channel.name}")
+        id = await self.async_input("channel index:")
+        await self.client.voice_clients[int(id)].disconnect()
+        logger.success("Disconnected")
+
+
