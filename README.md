@@ -35,9 +35,9 @@ __All commands work with the prefix ***<br>__
 + into - send a message to any channel (by ID)<br>
 + set - set the channel (by ID)
 + ***setuser - It works as a SpyAgentPM setting the user as a channel<br>
-***reply - reply to a message<br>
-***vcplay - turns on music in any voice channel<br>
-***vcstop - turns off the music where it is on (you can enable it in the config)
++ ***reply - reply to a message<br>
++ ***vcplay - turns on music in any voice channel<br>
++ ***vcstop - turns off the music where it is on (you can enable it in the config)
 
 ### **commands in private messages:** work in SpyAgentPM<br>
 
