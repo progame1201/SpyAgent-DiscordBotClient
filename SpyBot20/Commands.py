@@ -8,9 +8,10 @@ from asyncio import sleep
 import config
 from tkinter import filedialog
 from colorama import Fore, init
+import pyttsx3
 
 class Commands:
-    '''All commands of SpyAgent 2.8.0+
+    '''All commands of SpyAgent 2.9.0+
        most of the commands were taken from version 1.0.0-2.0.0, which is why their code maybe bad.
     '''
     def __init__(self, client=None, guild=None, channel=None):
@@ -185,9 +186,22 @@ class Commands:
         for key in statuses.keys():
             print(key)
         status = input("status:")
-        if status in statuses.keys():
+        if status.lower() in statuses.keys():
             await self.client.change_presence(status=statuses[status])
             logger.success(f"status changed to {status}")
+    async def activity(self):
+        print("activities list: game\nstreaming\nlistening\nwatching")
+        activity = await self.async_input("activity:")
+        name = await self.async_input("activity name:")
+        await self.client.change_presence(activity=None)
+        if activity.lower() == "game":
+            await self.client.change_presence(activity=Game(name=name))
+        if activity.lower() == "streaming":
+            await self.client.change_presence(activity=Streaming(name=name, url=await self.async_input("url:")))
+        if activity.lower() == "listening":
+            await self.client.change_presence(activity=Activity(type=ActivityType.listening, name=name))
+        if activity.lower() == "watching":
+            await self.client.change_presence(activity=Activity(type=ActivityType.watching, name=name))
     async def guildmute(self):
         guildlistformute = []
         guild_mute_list = self.getmutes()[1]
@@ -323,8 +337,15 @@ class Commands:
         for i, client in enumerate(self.vcchlients):
             print(f"{i}:{client.channel.name}")
         id = await self.async_input("channel index:")
+        if int(id) < 0:
+            return
         vcch = self.vcchlients[int(id)]
-        path = filedialog.askopenfilename()
+        print("opend methods:\n1: by path\n2: by filedialog")
+        method = await self.async_input("open method:")
+        if method == "1":
+         path = await self.async_input("path:")
+        elif method == "2":
+            path = filedialog.askopenfilename()
         if path == "" or path == None or path == " ":
             return
         source = FFmpegPCMAudio(path)
@@ -350,17 +371,38 @@ class Commands:
             for client in self.client.voice_clients:
                 if client.channel.guild.id == vcchannel.guild.id:
                     await client.disconnect()
-            self.vcchlients.append(await vcchannel.connect(timeout=5))
+            self.vcchlients.append(await vcchannel.connect())
             logger.success(f"connected! channel name {vcchannel.name}, channel id: {vcchannel.id}")
             return
         except Forbidden:
             logger.error(f"{Fore.RED}It's impossible to connect: Forbidden.")
             return
+    async def vctts(self):
+        for i, client in enumerate(self.vcchlients):
+            print(f"{i}:{client.channel.name}")
+        id = await self.async_input("channel index:")
+        if int(id) < 0:
+            return
+        vcch = self.vcchlients[int(id)]
+        message = await self.async_input("tts message:")
+        engine = pyttsx3.init()
+        engine.save_to_file(text=message, filename="VC_TEMP_TTS.wav")
+        engine.runAndWait()
+        source = FFmpegPCMAudio("VC_TEMP_TTS.wav")
+        vcch.play(source, after=self.VC_after_playing)
+        logger.success("Audio playback has started")
     async def vcdisconnect(self):
         for i, client in enumerate(self.client.voice_clients):
             print(f"{i}:{client.channel.name}")
         id = await self.async_input("channel index:")
-        await self.client.voice_clients[int(id)].disconnect()
+        if int(id) < 0:
+            return
+        for client in self.vcchlients:
+            if self.client.voice_clients[int(id)].channel.id == client.channel.id:
+                self.vcchlients.remove(client)
+                break
+        await self.client.voice_clients[int(id)].disconnect(force=True)
+
         logger.success("Disconnected")
     async def vcstop(self):
         for i, client in enumerate(self.vcchlients):

@@ -14,3 +14,6 @@ on_reaction_remove = True # default == True it only works if it happened in the 
 on_message_delete = True  # default == True it only works if it happened in the channel you selected
 on_message_edit = True # default == True it only works if it happened in the channel you selected
 on_guild_remove = True # default == True
+on_guild_join = True # default == True
+on_guild_channel_create = True # default == True it only works if it happened in the guild you selected
+on_guild_channel_delete = True # default == True it only works if it happened in the guild you selected

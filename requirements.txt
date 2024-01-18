@@ -2,3 +2,4 @@ disnake
 loguru
 pytz
 asyncio
+pyttsx3

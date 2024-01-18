@@ -12,18 +12,18 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.8.1, 2024, progame1201")
+logger.info("Spy Agent 2.9.0, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
 
 async def getmutes():
+    channels_mute_list = []
+    guild_mute_list = []
     if os.path.exists("channelmutes"):
         if os.path.getsize("channelmutes") > 0:
             data = open("channelmutes", 'rb').read()
             channels_mute_list = pickle.loads(data)
-        else:
-            channels_mute_list = []
     else:
             open("channelmutes", 'wb').close()
             channels_mute_list = []
@@ -32,8 +32,6 @@ async def getmutes():
         if os.path.getsize("guildmutes") > 0:
             data = open("guildmutes", 'rb').read()
             guild_mute_list = pickle.loads(data)
-        else:
-            guild_mute_list = []
     else:
             open("guildmutes", 'wb').close()
             guild_mute_list = []
@@ -110,11 +108,24 @@ async def detector():
           before, after = await client.wait_for("message_edit")
           if channel.id == after.channel.id:
            print(f"Message: {before.content} | has been changed to: {after.content} | in: {after.guild}: {after.channel}: {after.author}\n")
-
+    async def guild_channel_delete():
+        while True:
+          rchannel:channel = await client.wait_for("guild_channel_delete")
+          if rchannel.guild.id == guild.id:
+              print(f"channel {rchannel.name} has been deleted\n")
+    async def guild_channel_create():
+        while True:
+          cchannel:channel = await client.wait_for("guild_channel_create")
+          if cchannel.guild.id == guild.id:
+              print(f"channel {cchannel.name} has been created\n")
+    async def guild_join():
+        while True:
+          jguild = await client.wait_for("guild_join")
+          print(f"Client was joined to the {jguild.name} guild")
     async def guild_remove():
         while True:
-          guild = await client.wait_for("guild_remove")
-          print(f"The guild: {guild.name} | has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild.")
+          rguild = await client.wait_for("guild_remove")
+          print(f"The guild: {rguild.name} | has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild.\n")
 
     if config.detector:
         if config.on_reaction_add:
@@ -127,6 +138,12 @@ async def detector():
             asyncio.run_coroutine_threadsafe(message_edit(), client.loop)
         if config.on_guild_remove:
             asyncio.run_coroutine_threadsafe(guild_remove(), client.loop)
+        if config.on_guild_join:
+            asyncio.run_coroutine_threadsafe(guild_join(), client.loop)
+        if config.on_guild_channel_create:
+            asyncio.run_coroutine_threadsafe(guild_channel_create(), client.loop)
+        if config.on_guild_channel_delete:
+            asyncio.run_coroutine_threadsafe(guild_channel_delete(), client.loop)
 async def receive_messages():
     global channel
     global guild
@@ -203,6 +220,8 @@ async def chatting():
  cm.new(command_name="***vcconnect", func=cmnds.vcconnect)
  cm.new(command_name="***vcstop", func=cmnds.vcstop)
  cm.new(command_name="***vcdisconnect", func=cmnds.vcdisconnect)
+ cm.new(command_name="***activity", func=cmnds.activity)
+ cm.new(command_name="***vctts", func=cmnds.vctts)
  print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}type ***help to get more info!")
  logger.success("Command manager started!")
  await sleep(2)
@@ -211,7 +230,7 @@ async def chatting():
    await sleep(1)
    senddata = await async_input(f"{Fore.LIGHTBLACK_EX}Message to {channel.name}:\n{Fore.RESET}")
    if senddata.lower() == "***help":
-       print("#####HELP#####\n***Mute - mute any channel\n***Unmute - unmute any channel\n***Delete - delete any message you have selected\n***Reset - Re-select the guild and channel for communication\n***Resetchannel - Re-select a channel for communication\n***File - send a file\n***Muteguild - mute any guild\n***Unmuteguild - unmute any guild\n***Reaction - react any message\n***Privatemsg - Send a private message to the user\n***Gethistory - Get the history of the channel you are on\n***into - send a message to any channel (by ID)\n***set - set the channel (by ID)\n***setuser - It works as a Spy Agent PM setting the user as a channel\n***reply - reply to a message\n***vcplay - turns on music\n***vcstop - turns off the music\n***edit - edit any message\n***vcconnect - connect to any voice channel\n***vcdisconnect - disconnect from voice channel\n#####INFO#####\nall messages are written in the format: guild: channel: author: message\n##############")
+       print("#####HELP#####\n***Mute - mute any channel\n***Unmute - unmute any channel\n***Delete - delete any message you have selected\n***Reset - Re-select the guild and channel for communication\n***Resetchannel - Re-select a channel for communication\n***File - send a file\n***Muteguild - mute any guild\n***Unmuteguild - unmute any guild\n***Reaction - react any message\n***Privatemsg - Send a private message to the user\n***Gethistory - Get the history of the channel you are on\n***into - send a message to any channel (by ID)\n***set - set the channel (by ID)\n***setuser - It works as a Spy Agent PM setting the user as a channel\n***reply - reply to a message\n***vcplay - turns on music\n***vcstop - turns off the music\n***edit - edit any message\n***vcconnect - connect to any voice channel\n***vcdisconnect - disconnect from voice channel\n***vctts - plays tts message to the voice channel\n***activity - to put an activity on the bot, for example: playing a game\n#####INFO#####\nall messages are written in the format: guild: channel: author: message\n##############")
        continue
 
    cmresult = cm.execute(senddata)
