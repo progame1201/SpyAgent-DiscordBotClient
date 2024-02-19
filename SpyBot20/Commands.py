@@ -190,18 +190,15 @@ class Commands:
             await self.client.change_presence(status=statuses[status])
             logger.success(f"status changed to {status}")
     async def activity(self):
-        print("activities list: game\nstreaming\nlistening\nwatching")
+        name = await self.async_input("description of the activity:")
+        activities = {"game":Game(name=name), "listening":Activity(type=ActivityType.listening, name=name), "watching":Activity(type=ActivityType.watching, name=name)}
+        print("activities list:")
+        for activity in activities.keys():
+            print(activity)
         activity = await self.async_input("activity:")
-        name = await self.async_input("activity name:")
-        await self.client.change_presence(activity=None)
-        if activity.lower() == "game":
-            await self.client.change_presence(activity=Game(name=name))
-        if activity.lower() == "streaming":
-            await self.client.change_presence(activity=Streaming(name=name, url=await self.async_input("url:")))
-        if activity.lower() == "listening":
-            await self.client.change_presence(activity=Activity(type=ActivityType.listening, name=name))
-        if activity.lower() == "watching":
-            await self.client.change_presence(activity=Activity(type=ActivityType.watching, name=name))
+        if activity in activities.keys():
+            await self.client.change_presence(activity=activities[activity])
+
     async def guildmute(self):
         guildlistformute = []
         guild_mute_list = self.getmutes()[1]
@@ -340,7 +337,7 @@ class Commands:
         if int(id) < 0:
             return
         vcch = self.vcchlients[int(id)]
-        print("opend methods:\n1: by path\n2: by filedialog")
+        print("opened methods:\n1: by path\n2: by filedialog")
         method = await self.async_input("open method:")
         if method == "1":
          path = await self.async_input("path:")
@@ -353,6 +350,8 @@ class Commands:
         logger.success("Audio playback has started")
 
     def VC_after_playing(self, error):
+        if os.path.exists("VC_TEMP_TTS.wav"):
+            os.remove("VC_TEMP_TTS.wav")
         if error:
             pass
         else:

@@ -12,7 +12,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.9.0, 2024, progame1201")
+logger.info("Spy Agent 2.9.1, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -85,65 +85,49 @@ async def on_ready():
 async def detector():
     global guild
     global channel
-    async def reaction_add():
-        while True:
-          reaction, user = await client.wait_for('reaction_add')
+    async def on_reaction_add(reaction, user):
           if channel.id == reaction.message.channel.id:
            print(f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: {reaction.message.content} | by {user.name}\n")
 
-    async def reaction_remove():
-        while True:
-          reaction, user = await client.wait_for('reaction_remove')
+    async def on_reaction_remove(reaction, user):
           if channel.id == reaction.message.channel.id:
            print(f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: {reaction.message.content} | by {user.name}\n")
 
-    async def message_delete():
-        while True:
-          message:Message = await client.wait_for("message_delete")
+    async def on_message_delete(message:Message):
           if channel.id == message.channel.id:
            print(f"Message {message.content} | was removed from: {message.guild}: {message.channel}: {message.author}\n")
 
-    async def message_edit():
-        while True:
-          before, after = await client.wait_for("message_edit")
+    async def on_message_edit(before, after):
           if channel.id == after.channel.id:
            print(f"Message: {before.content} | has been changed to: {after.content} | in: {after.guild}: {after.channel}: {after.author}\n")
-    async def guild_channel_delete():
-        while True:
-          rchannel:channel = await client.wait_for("guild_channel_delete")
+    async def on_guild_channel_delete(rchannel:channel):
           if rchannel.guild.id == guild.id:
               print(f"channel {rchannel.name} has been deleted\n")
-    async def guild_channel_create():
-        while True:
-          cchannel:channel = await client.wait_for("guild_channel_create")
+    async def on_guild_channel_create(cchannel:channel):
           if cchannel.guild.id == guild.id:
               print(f"channel {cchannel.name} has been created\n")
-    async def guild_join():
-        while True:
-          jguild = await client.wait_for("guild_join")
+    async def on_guild_join(jguild):
           print(f"Client was joined to the {jguild.name} guild")
-    async def guild_remove():
-        while True:
-          rguild = await client.wait_for("guild_remove")
+    async def on_guild_remove(rguild):
           print(f"The guild: {rguild.name} | has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild.\n")
 
     if config.detector:
         if config.on_reaction_add:
-            asyncio.run_coroutine_threadsafe(reaction_add(), client.loop)
+            client.event(on_reaction_add)
         if config.on_reaction_remove:
-            asyncio.run_coroutine_threadsafe(reaction_remove(), client.loop)
+            client.event(on_reaction_remove)
         if config.on_message_delete:
-            asyncio.run_coroutine_threadsafe(message_delete(), client.loop)
+            client.event(on_message_delete)
         if config.on_message_edit:
-            asyncio.run_coroutine_threadsafe(message_edit(), client.loop)
+            client.event(on_message_edit)
         if config.on_guild_remove:
-            asyncio.run_coroutine_threadsafe(guild_remove(), client.loop)
+            client.event(on_guild_remove)
         if config.on_guild_join:
-            asyncio.run_coroutine_threadsafe(guild_join(), client.loop)
+            client.event(on_guild_join)
         if config.on_guild_channel_create:
-            asyncio.run_coroutine_threadsafe(guild_channel_create(), client.loop)
+            client.event(on_guild_channel_create)
         if config.on_guild_channel_delete:
-            asyncio.run_coroutine_threadsafe(guild_channel_delete(), client.loop)
+            client.event(on_guild_channel_delete)
 async def receive_messages():
     global channel
     global guild
@@ -183,10 +167,10 @@ async def receive_messages():
           for attachment in message.attachments:
               attachment_list.append(attachment.url)
           msg += f" | attachments: {attachment_list}"
-      if message.reference:
-          if config.allow_reference_display:
-           reference = await message.channel.fetch_message(message.reference.message_id)
-           msg += f" | reference: {reference.author.name}: {reference.content}"
+
+      if message.reference and message.reference.message_id:
+          reference = await message.channel.fetch_message(message.reference.message_id)
+          msg += f" | reference: reply: {reference.author.name}: {reference.content}"
 
       print(f"{msg}\n")
       if config.notification == True:
