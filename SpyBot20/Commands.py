@@ -17,7 +17,7 @@ class Commands:
     def __init__(self, client=None, guild=None, channel=None):
         self.client:Client = client
         self.channel:TextChannel = channel
-        self.guild = guild
+        self.guild:Guild = guild
         self.vcchlients:list[VoiceClient] = []
         init(autoreset=True)
     def getmutes(self):
@@ -361,7 +361,7 @@ class Commands:
         channels: dict[int, dict[str:int]] = {}
         for i, channel in enumerate(self.guild.voice_channels):
             channels.update({i: {channel.name: channel.id}})
-            print(f"{i}: {channel.name}")
+            print(f"{i}: {channel.name} {[member.name for member in channel.members]}")
         data = await self.async_input("channel index:")
         if data == "" or data == None:
             return
@@ -412,5 +412,11 @@ class Commands:
         except:
             pass
         logger.success("Stoped playing.")
+    async def leave(self):
+        print(f"Do you really want to quit from {self.guild.name}?")
+        confirmation = input("yes or no: ").lower()
+        if confirmation == "yes" or confirmation == "y":
+         await self.guild.leave()
+         logger.success("I'm leaving the current guild.")
 
 

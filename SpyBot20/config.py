@@ -17,3 +17,4 @@ on_guild_remove = True # default == True
 on_guild_join = True # default == True
 on_guild_channel_create = True # default == True it only works if it happened in the guild you selected
 on_guild_channel_delete = True # default == True it only works if it happened in the guild you selected
+on_voice_state_update = True # default == True it only works if it happened in the guild you selected

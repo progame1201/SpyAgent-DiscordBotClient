@@ -12,7 +12,7 @@ import config
 from colorama import Fore, init
 import Commands
 import LocalCommandManager
-logger.info("Spy Agent 2.9.1, 2024, progame1201")
+logger.info("Spy Agent 2.10.0, 2024, progame1201")
 logger.info("Running...")
 client:Client = Client(intents=Intents.all())
 init(autoreset=True)
@@ -39,8 +39,7 @@ async def getmutes():
 def calculate_file_hash(file_path):
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as file:
-        for byte_block in iter(lambda: file.read(), b""):
-            sha256_hash.update(byte_block)
+        sha256_hash.update(file.read())
     return sha256_hash.hexdigest()
 def check_file_integrity(file_path):
     global hashes
@@ -56,18 +55,14 @@ async def on_ready():
     global guild
     global channel
     logger.info(f"Welcome {client.user.name}! Bot ID: {client.user.id}")
-
     await sleep(1)
-
     print("Choose a server:")
     for i, guild in enumerate(client.guilds):
         print(f"{i}: {guild.name}")
     data = await async_input("server index:")
     guild = client.guilds[int(data)]
     logger.success(f"guild assigned! guild name: {guild.name}, guild owner: {guild.owner}, guild id: {guild.id} guild icon url: {guild.icon.url}")
-
     await sleep(1)
-
     print("Choose channel:")
     channels: dict[int, dict[str:int]] = {}
     for i, channel in enumerate(guild.text_channels):
@@ -109,8 +104,14 @@ async def detector():
     async def on_guild_join(jguild):
           print(f"Client was joined to the {jguild.name} guild")
     async def on_guild_remove(rguild):
-          print(f"The guild: {rguild.name} | has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild.\n")
+          print(f"The guild: {rguild.name} | has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild. Or did you just quit the guild)\n")
 
+    async def on_voice_state_update(member:Member, before, after):
+        if member.guild.id == guild.id:
+         if before.channel is None and after.channel is not None:
+            print(f'{member.name} joined voice channel {after.channel}')
+         elif before.channel is not None and after.channel is None:
+            print(f'{member.name} left voice channel {before.channel}')
     if config.detector:
         if config.on_reaction_add:
             client.event(on_reaction_add)
@@ -128,6 +129,8 @@ async def detector():
             client.event(on_guild_channel_create)
         if config.on_guild_channel_delete:
             client.event(on_guild_channel_delete)
+        if config.on_voice_state_update:
+            client.event(on_voice_state_update)
 async def receive_messages():
     global channel
     global guild
@@ -141,11 +144,11 @@ async def receive_messages():
       rounded_date_string = message.created_at.astimezone(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M')
       if isinstance(message.channel, DMChannel):
         if config.allow_private_messages:
-          msg = f"Private message: {message.channel}: {rounded_date_string} ({message.author.id})"
+          msg = f"Private message: {message.channel}: {rounded_date_string} (user id: {message.author.id})"
         else:
            continue
       else:
-       msg = f"{message.guild}: {message.channel} ({message.channel.id}): {rounded_date_string}"
+       msg = f"{message.guild}: {message.channel} (channel id: {message.channel.id}): {rounded_date_string}"
        if check_file_integrity("guildmutes") or check_file_integrity("channelmutes"):
          lastmutes = await getmutes()
          channels_mute_list = lastmutes[0]
@@ -206,6 +209,7 @@ async def chatting():
  cm.new(command_name="***vcdisconnect", func=cmnds.vcdisconnect)
  cm.new(command_name="***activity", func=cmnds.activity)
  cm.new(command_name="***vctts", func=cmnds.vctts)
+ cm.new(command_name="***guildleave", func=cmnds.leave)
  print(f"\n{Fore.YELLOW}List of loaded commands:\n{cm.get_keys()}\n{Fore.CYAN}type ***help to get more info!")
  logger.success("Command manager started!")
  await sleep(2)
