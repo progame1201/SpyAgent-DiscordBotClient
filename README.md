@@ -17,6 +17,7 @@ to find out all the commands and their functionality, you can type ***help<br>
 <br>
 
 # Command list
+ You can open a window for entering commands by pressing F12 (default) or by typing as a message. Example: ***help<br>
 __All commands work with the prefix ***<br>__
 
 ### **In the mode of communication on servers:** <br>
