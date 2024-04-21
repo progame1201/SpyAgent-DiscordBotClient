@@ -3,3 +3,4 @@ loguru
 pytz
 asyncio
 pyttsx3
+keyboard
