@@ -23,15 +23,15 @@ __All commands work with the prefix `***`__ *(by default)*<br>
 ### **In the mode of communication on servers:** <br>
 + help - help.
 + reset change the channel and guild<br>
-+ file <message> - send file with message<br>
++ file `<message>` - send file with message<br>
 + mute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - select a channel or guild for mute<br>
 + unmute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - remove the channel or guild from mute <br>
 + ~~reaction - Put a reaction under the message<br>~~ 
-+ history <channel id> - Get the history of the channel you are on. Or from channel by id.<br>
++ history `<channel id>` - Get the history of the channel you are on. Or from channel by id.<br>
 + delete - delete a message<br>
-+ edit <message> - Edit the message<br>
-+ set <channel id> - set the channel by id.<br>
-+ reply <message> - reply to a message<br>
++ edit `<message>` - Edit the message<br>
++ set `<channel id>` - set the channel by id.<br>
++ reply `<message>` - reply to a message<br>
 + ~~vcplay - turns on music<br>~~
 + ~~vcstop - turns off the music<br>~~
 + ~~vcconnect - connect to any voice channel<br>~~
