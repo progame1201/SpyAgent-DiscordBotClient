@@ -11,9 +11,9 @@ def log(string, end="\n", show_time=False):
 
 def user_message(string, end="\n", show_time=True):
     if show_time:
-        print(f"{Fore.YELLOW}[{datetime.now()}] {string}", end=end)
+        print(f"{Fore.WHITE}[{datetime.now()}] {string}", end=end)
         return
-    print(f"{Fore.YELLOW}{string}", end=end)
+    print(f"{Fore.WHITE}{string}", end=end)
 
 def event(string, end="\n", show_time=True):
     if show_time:

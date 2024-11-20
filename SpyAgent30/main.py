@@ -7,7 +7,7 @@ import conifg
 from Commands import *
 
 
-log("SpyAgent-DiscordBotClient 3.0.0, 2024, progame1201")
+log("SpyAgent-DiscordBotClient 3.0.1, 2024, progame1201")
 client = Client(intents=Intents.all())
 mutes = mute_utils.get_mutes()
 

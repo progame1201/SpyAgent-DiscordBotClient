@@ -1,6 +1,7 @@
 from disnake import *
 from aioconsole import ainput
 from Log import log, error, user_message
+from colorama import Fore
 import pickle
 import os
 
@@ -13,6 +14,7 @@ async def async_int_input(prompt=""):
         except:
             log("enter a number, not text")
             pass
+
 async def try_async_int_input(prompt=""):
     while True:
         try:
@@ -40,20 +42,25 @@ async def prepare_message(message, only_write_messages_from_selected_channel=Tru
     else:
         compiled_message = f"[{message.author.name}] {message.content}"
     if message.reference and message.reference.message_id:
-        replied_message = await message.channel.fetch_message(message.reference.message_id)
+        try:
+            replied_message = await message.channel.fetch_message(message.reference.message_id)
 
-        if len(replied_message.content) >= 60:
-            content = replied_message.content[:60]
-        else:
-            content = replied_message.content
+            if len(replied_message.content) >= 60:
+                content = replied_message.content[:60]
+            else:
+                content = replied_message.content
 
-        compiled_message += f"\n↳replies to the message: [{replied_message.author.name}] {content}"
+            compiled_message += f"\n{Fore.YELLOW}↳replies to the message: [{replied_message.author.name}] {content}"
+        except NotFound:
+            compiled_message += f"\n{Fore.YELLOW}↳replies to unknown message"
+        except Exception as ex:
+            log(f"Exception occurred when getting reply: {ex}")
 
     if message.attachments:
         for attachment in message.attachments:
-            compiled_message += f"\n↳attachment:{attachment.filename} ({attachment.url})"
+            compiled_message += f"\n{Fore.YELLOW}↳attachment:{attachment.filename} ({attachment.url})"
     if show_ids:
-        compiled_message += f"\n↳channel id:{message.channel.id}, message id:{message.id}"
+        compiled_message += f"\n{Fore.YELLOW}↳channel id:{message.channel.id}, message id:{message.id}"
 
     return compiled_message
 
@@ -61,6 +68,7 @@ async def show_history(channel):
     messages = await get_history(channel)
     for message in messages:
         user_message(await prepare_message(message, True))
+
 class Select_utils:
     def __init__(self, client:Client):
         self.client:Client = client
