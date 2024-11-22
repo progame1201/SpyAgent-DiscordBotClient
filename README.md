@@ -1,6 +1,6 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/progame1201/SpyAgent-DiscordBot/total)
 
-# SpyAgent-DiscordBot description
+# SpyAgent-DiscordBotClient description
 a bot that allows you to track messages on connected servers and also send messages to selected channels on behalf of the bot<br>
 the program is designed for Windows OS<br>
 I recommend using Windows Terminal: https://www.microsoft.com/store/productId/9N0DX20HK701?ocid=pdpshare
