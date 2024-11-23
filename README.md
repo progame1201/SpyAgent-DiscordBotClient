@@ -26,7 +26,7 @@ __All commands work with the prefix `***`__ *(by default)*<br>
 + file `<message>` - send file with message<br>
 + mute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - select a channel or guild for mute<br>
 + unmute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - remove the channel or guild from mute <br>
-+ ~~reaction - Put a reaction under the message<br>~~ 
++ reaction `<mode: 1 - choose the emoji yourself; 2 - Select an emoji from the list of all emojis>` - Put a reaction under the message<br>
 + history `<channel id>` - Get the history of the channel you are on. Or from channel by id.<br>
 + delete - delete a message<br>
 + edit `<message>` - Edit the message<br>
@@ -37,4 +37,4 @@ __All commands work with the prefix `***`__ *(by default)*<br>
 + ~~vcconnect - connect to any voice channel<br>~~
 + ~~vcdisconnect - disconnect from voice channel~~
 + ~~vctts - use tts in voice chat<br>~~
-+ ~~guildleave - allows you to exit the guild you are in<br>~~
++ guildleave - choose a guild to exit it<br>
