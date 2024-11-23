@@ -15,12 +15,12 @@ class delete(command):
         history = [message for message in history if message.author.id == self.client.user.id]
 
         for i, message in enumerate(history):
-            user_message(f"{Fore.LIGHTWHITE_EX}{i}{Fore.YELLOW} - {await prepare_message(message)}")
+            user_message(f"{i} - {await prepare_message(message)}")
 
         index = await try_async_int_input("enter message index: ")
         if not index:
             log("You entered incorrect message index. the command will not continue execution.")
-        if len(history) - 1 < index and index < 0:
+        if len(history) - 1 < index or index < 0:
             log("You entered incorrect message index. the command will not continue execution.")
         message = history[index]
 

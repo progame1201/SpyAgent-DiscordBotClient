@@ -7,8 +7,9 @@ import conifg
 from Commands import *
 
 
-log("SpyAgent-DiscordBotClient 3.0.1, 2024, progame1201")
+log("SpyAgent-DiscordBotClient 3.0.2, 2024, progame1201")
 client = Client(intents=Intents.all())
+
 mutes = mute_utils.get_mutes()
 
 guild_mutes = []
@@ -61,14 +62,18 @@ async def detector():
     async def on_message_edit(before, after):
           if channel.id == after.channel.id:
            event(f"Message: {after.author}: {before.content[:40]} | has been changed to: {after.author}: {after.content[:40]}\n")
+
     async def on_guild_channel_delete(channel:channel):
           if channel.guild.id == guild.id:
               event(f"channel {channel.name} has been deleted\n")
+
     async def on_guild_channel_create(channel:channel):
           if channel.guild.id == guild.id:
               event(f"channel {channel.name} has been created | id: {channel.id}\n")
+
     async def on_guild_join(guild):
           event(f"Client was joined to the {guild.name} guild")
+
     async def on_guild_remove(guild):
           event(f"The guild: {guild.name} has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild. Or did you just quit the guild)\n")
 
@@ -135,6 +140,10 @@ async def message_sender():
 
                     if isinstance(output.mute_object, guild_mute):
                         guild_mutes.remove(output.mute_object.id)
+
+                if isinstance(output, guildleave_output):
+                    guild = output.guild
+                    channel = output.channel
 
             continue
         await channel.send(message)

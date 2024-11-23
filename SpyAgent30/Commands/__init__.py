@@ -9,7 +9,8 @@ from .delete import delete
 from .mute import mute_output, mute
 from .unmute import unmute, unmute_output
 from .edit import edit
-
+from .reaction import reaction
+from .guildleave import guildleave_output, guildleave
 
 def get_commands(guild, channel, client):
     return [
@@ -22,4 +23,6 @@ def get_commands(guild, channel, client):
         mute(guild, channel, client),
         unmute(guild, channel, client),
         edit(guild, channel, client),
+        reaction(guild, channel, client),
+        guildleave(guild, channel, client),
     ]
