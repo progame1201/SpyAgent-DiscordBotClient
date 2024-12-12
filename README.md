@@ -20,7 +20,7 @@ to find out all the commands and their functionality, you can type ***help<br>
  You can open a window for entering commands by pressing F12 (**only in 2.0 version**) or by typing as a message. Example: ***help<br>
 __All commands work with the prefix `***`__ *(by default)*<br>
 
-### **In the mode of communication on servers:** <br>
+### **Command list** <br>
 + help - help.
 + reset change the channel and guild<br>
 + file `<message>` - send file with message<br>
