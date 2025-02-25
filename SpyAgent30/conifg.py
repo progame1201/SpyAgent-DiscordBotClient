@@ -1,3 +1,4 @@
-token = ""
-only_write_messages_from_selected_channel = True
-command_prefix = "***"
+TOKEN = ""
+WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL = True
+COMMAND_PREFIX = "***"
+TIMEZONE = "Europe/Moscow"

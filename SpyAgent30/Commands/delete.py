@@ -7,7 +7,7 @@ from colorama import Fore
 class delete(command):
     def __init__(self, guild:Guild, channel:TextChannel, client:Client):
         super().__init__(guild, channel, client)
-        self.description = "delete - delete a message"
+        self.description = f"{self.name} - delete a message"
 
 
     async def execute(self, *args):
@@ -18,10 +18,13 @@ class delete(command):
             user_message(f"{i} - {await prepare_message(message)}")
 
         index = await try_async_int_input("enter message index: ")
-        if not index:
+        if index is None:
             log("You entered incorrect message index. the command will not continue execution.")
+            return
+
         if len(history) - 1 < index or index < 0:
             log("You entered incorrect message index. the command will not continue execution.")
+            return
         message = history[index]
 
         await message.delete()

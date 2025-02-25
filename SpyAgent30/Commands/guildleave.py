@@ -16,11 +16,14 @@ class guildleave(command):
     def __init__(self, guild:Guild, channel:TextChannel, client:Client):
         super().__init__(guild, channel, client)
         self.select_utils = Select_utils(client)
-        self.description = "guildleave - choose a guild to exit it"
+        self.description = f"{self.name} - choose a guild to exit it"
 
     async def execute(self, *args):
         log(f"{Fore.WHITE}select the guild you want to leave")
-        guild = await self.select_utils.select_guild()
+        guild = await self.select_utils.select_guild(stop_if_error=True)
+        if not guild:
+            log("You entered incorrect guild index. the command will not continue execution.")
+            return
         log(f"{Fore.WHITE}Are you sure about this? You will not be able to return to the guild on your own")
         log(f"{Fore.WHITE}Write the name of the guild to leave it ({guild.name})")
         name = await ainput("name: ")

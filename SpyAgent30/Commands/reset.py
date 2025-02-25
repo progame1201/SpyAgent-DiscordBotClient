@@ -14,7 +14,7 @@ class reset(command):
     def __init__(self, guild:Guild, channel:TextChannel, client:Client):
         super().__init__(guild, channel, client)
         self.select_utils = Select_utils(client)
-        self.description = "reset - change the channel and guild"
+        self.description = f"{self.name} - change the channel and guild"
 
     async def execute(self, *args):
         guild = await self.select_utils.select_guild()

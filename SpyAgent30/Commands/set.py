@@ -13,7 +13,7 @@ class set(command):
     def __init__(self, guild:Guild, channel:TextChannel, client:Client):
         super().__init__(guild, channel, client)
         self.select_utils = Select_utils(client)
-        self.description = "set <channel id> - set the channel by id."
+        self.description = f"{self.name} <channel id> - set the channel by id."
     async def execute(self, *args):
         try:
             channel = await self.client.fetch_channel(args[0][0])

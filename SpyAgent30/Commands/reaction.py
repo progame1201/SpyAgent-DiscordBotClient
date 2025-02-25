@@ -8,13 +8,14 @@ from colorama import Fore
 class reaction(command):
     def __init__(self, guild:Guild, channel:TextChannel, client:Client):
         super().__init__(guild, channel, client)
-        self.description = "reaction <mode: 1 - choose the emoji yourself; 2 - Select an emoji from the list of all emojis> - Put a reaction under the message"
+        self.description = f"{self.name} <mode: 1 - choose the emoji yourself; 2 - Select an emoji from the list of all emojis> - Put a reaction under the message"
 
 
     async def execute(self, *args):
         if not args[0]:
             log("You entered incorrect reaction mode. the command will not continue execution.")
             return
+        args = args[0]
 
         history = await get_history(self.channel, limit=50)
 
@@ -23,17 +24,19 @@ class reaction(command):
 
         index = await try_async_int_input("enter message index: ")
 
-        if not index:
+        if index is None:
             log("You entered incorrect message index. the command will not continue execution.")
+            return
         if len(history) - 1 < index or index < 0:
             log("You entered incorrect message index. the command will not continue execution.")
+            return
 
         message:Message = history[index]
 
-        if args[0][0] in ["1"]:
+        if args[0] in ["1"]:
             emoji = await ainput("emoji: ")
 
-        elif args[0][0] in ["2"]:
+        elif args[0] in ["2"]:
             for i, emoji in enumerate(self.client.emojis):
                 log(f'{i}: {emoji.name} - {emoji.url}')
 

@@ -2,7 +2,7 @@
 
 # SpyAgent-DiscordBotClient description
 SpyAgent is a console application written in Python that is a client for the Discord bot.<br>
-the program is designed for Windows OS<br>
+the program is designed for Windows<br>
 I recommend using Windows Terminal: https://www.microsoft.com/store/productId/9N0DX20HK701?ocid=pdpshare
 # How to use it?
 To use this program, you need python, preferably version 3.12 or 3.11<br>
@@ -17,10 +17,10 @@ to find out all the commands and their functionality, you can type ***help<br>
 <br>
 
 # Command list
- You can open a window for entering commands by pressing F12 (**only in 2.0 version**) or by typing as a message. Example: ***help<br>
+*(only in SpyAgent 2.x.x) You can open a window for entering commands by pressing F12 (default)* or by typing as a message. Example: ***help<br>
 __All commands work with the prefix `***`__ *(by default)*<br>
 
-### **Command list** <br>
+### **In the mode of communication on servers:** <br>
 + help - help.
 + reset change the channel and guild<br>
 + file `<message>` - send file with message<br>
@@ -32,9 +32,9 @@ __All commands work with the prefix `***`__ *(by default)*<br>
 + edit `<message>` - Edit the message<br>
 + set `<channel id>` - set the channel by id.<br>
 + reply `<message>` - reply to a message<br>
-+ ~~vcplay - turns on music<br>~~
-+ ~~vcstop - turns off the music<br>~~
-+ ~~vcconnect - connect to any voice channel<br>~~
-+ ~~vcdisconnect - disconnect from voice channel~~
++ vcplay - choose and play any file<br>
++ vcstop - stop playing file<br>
++ vcconnect - connect to voice channel<br>
++ vcdisconnect - disconnect from voice channel
 + ~~vctts - use tts in voice chat<br>~~
 + guildleave - choose a guild to exit it<br>

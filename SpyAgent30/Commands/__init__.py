@@ -11,6 +11,11 @@ from .unmute import unmute, unmute_output
 from .edit import edit
 from .reaction import reaction
 from .guildleave import guildleave_output, guildleave
+from .vcplay import vcplay
+from .vcdisconnect import vcdisconnect_output, vcdisconnect
+from .vcconnect import vcconnect_output, vcconnect
+from .vcstop import vcstop
+
 
 def get_commands(guild, channel, client):
     return [
@@ -25,4 +30,8 @@ def get_commands(guild, channel, client):
         edit(guild, channel, client),
         reaction(guild, channel, client),
         guildleave(guild, channel, client),
+        vcdisconnect(guild, channel, client),
+        vcconnect(guild, channel, client),
+        vcplay(guild, channel, client),
+        vcstop(guild, channel, client),
     ]

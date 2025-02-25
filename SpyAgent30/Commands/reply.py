@@ -7,7 +7,7 @@ from colorama import Fore
 class reply(command):
     def __init__(self, guild:Guild, channel:TextChannel, client:Client):
         super().__init__(guild, channel, client)
-        self.description = "reply <message> - reply to a message<br>"
+        self.description = f"{self.name} <message> - reply to a message<br>"
 
     async def execute(self, *args):
         if not args[0]:
@@ -17,8 +17,12 @@ class reply(command):
         for i, message in enumerate(history):
             user_message(f"{Fore.LIGHTWHITE_EX}{i}{Fore.YELLOW} - {await prepare_message(message)}")
         index = await try_async_int_input("enter message index: ")
-        if not index:
+        if index is None:
             log("You entered incorrect message index. the command will not continue execution.")
+            return
+        if len(history) - 1 < index or index < 0:
+            log("You entered incorrect message index. the command will not continue execution.")
+            return
         message = history[index]
 
         await message.reply("".join(args[0][0]))
