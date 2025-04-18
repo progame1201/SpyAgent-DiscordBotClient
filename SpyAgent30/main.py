@@ -6,7 +6,7 @@ import asyncio
 import conifg
 from Commands import *
 
-log("SpyAgent-DiscordBotClient 3.1.0, 2025, progame1201")
+log("SpyAgent-DiscordBotClient 3.1.1, 2025, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = mute_utils.get_mutes()
@@ -33,7 +33,6 @@ async def on_ready():
     guild = await select_utils.select_guild()
     channel = await select_utils.select_channel(guild)
     await show_history(channel)
-    await detector()
     asyncio.run_coroutine_threadsafe(message_sender(), client.loop)
 
 
@@ -48,57 +47,66 @@ async def on_message(message: Message):
     user_message(await prepare_message(message, conifg.WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL))
 
 
-async def detector():
-    async def on_reaction_add(reaction, user):
-        if channel.id == reaction.message.channel.id:
-            event(
-                f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: {reaction.message.content[:40]} | by {user.name}\n")
-
-    async def on_reaction_remove(reaction, user):
-        if channel.id == reaction.message.channel.id:
-            event(
-                f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: {reaction.message.content}\n")
-
-    async def on_message_delete(message: Message):
-        if channel.id == message.channel.id:
-            event(f"Message removed {message.author}: {message.content[:40]} \n")
-
-    async def on_message_edit(before, after):
-        if channel.id == after.channel.id:
-            event(
-                f"Message: {after.author}: {before.content[:40]} | has been changed to: {after.author}: {after.content[:40]}\n")
-
-    async def on_guild_channel_delete(channel: channel):
-        if channel.guild.id == guild.id:
-            event(f"channel {channel.name} has been deleted\n")
-
-    async def on_guild_channel_create(channel: channel):
-        if channel.guild.id == guild.id:
-            event(f"channel {channel.name} has been created | id: {channel.id}\n")
-
-    async def on_guild_join(guild):
-        event(f"Client was joined to the {guild.name} guild")
-
-    async def on_guild_remove(guild):
+@client.event
+async def on_reaction_add(reaction, user):
+    if channel.id == reaction.message.channel.id:
         event(
-            f"The guild: {guild.name} has been removed from the guild list (this could be due to: The client has been banned. The client was kicked out. The guild owner deleted the guild. Or did you just quit the guild)\n")
+            f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: {reaction.message.content[:40]} | by {user.name}\n")
 
-    async def on_voice_state_update(member: Member, before, after):
-        if member.guild.id == guild.id:
-            if before.channel is None and after.channel is not None:
-                event(f'{member.name} joined voice channel {after.channel}')
-            elif before.channel is not None and after.channel is None:
-                event(f'{member.name} left voice channel {before.channel}')
 
-    client.event(on_reaction_add)
-    client.event(on_reaction_remove)
-    client.event(on_message_delete)
-    client.event(on_message_edit)
-    client.event(on_guild_remove)
-    client.event(on_guild_join)
-    client.event(on_guild_channel_create)
-    client.event(on_guild_channel_delete)
-    client.event(on_voice_state_update)
+@client.event
+async def on_reaction_remove(reaction):
+    if channel.id == reaction.message.channel.id:
+        event(
+            f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: "
+            f"{reaction.message.content if len(reaction.message.content) < 40 else f"{reaction.message.content[:40]}..."}\n")
+
+
+@client.event
+async def on_message_delete(message: Message):
+    if channel.id == message.channel.id:
+        event(f"Message removed {message.author}: {message.content[:40]} \n")
+
+
+@client.event
+async def on_message_edit(before, after):
+    if channel.id == after.channel.id:
+        event(
+            f"Message: {after.author}: {before.content[:40]} | has been changed to: {after.author}: {after.content[:40]}\n")
+
+
+@client.event
+async def on_guild_channel_delete(channel: channel):
+    if channel.guild.id == guild.id:
+        event(f"channel {channel.name} has been deleted\n")
+
+
+@client.event
+async def on_guild_channel_create(channel: channel):
+    if channel.guild.id == guild.id:
+        event(f"channel {channel.name} has been created | id: {channel.id}\n")
+
+
+@client.event
+async def on_guild_join(guild):
+    event(f"Client was joined to the {guild.name} guild")
+
+
+@client.event
+async def on_guild_remove(guild):
+    event(
+        f"The guild: {guild.name} has been removed from the guild list (this could be due to: "
+        f"The client has been banned. The client was kicked out. The guild owner deleted the guild. "
+        f"Or did you just quit the guild)\n")
+
+
+@client.event
+async def on_voice_state_update(member: Member, before, after):
+    if member.guild.id == guild.id:
+        if before.channel is None and after.channel is not None:
+            event(f'{member.name} joined voice channel {after.channel}')
+        elif before.channel is not None and after.channel is None:
+            event(f'{member.name} left voice channel {before.channel}')
 
 
 async def message_sender():
@@ -108,7 +116,7 @@ async def message_sender():
         message: str = await ainput("")
         if message.lower().startswith(conifg.COMMAND_PREFIX):
             message = message.replace(conifg.COMMAND_PREFIX, "").lower()
-            if message == "help":  #workaround
+            if message == "help":
                 print()
                 log("HELP:")
                 for _command in get_commands(guild, channel, client):
@@ -144,7 +152,6 @@ async def message_sender():
                     vc_clients.append(output.vc_client)
 
                 if isinstance(output, mute_output):
-
                     if isinstance(output.mute_object, channel_mute):
                         channel_mutes.append(output.mute_object.id)
 
