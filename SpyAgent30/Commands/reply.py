@@ -25,4 +25,4 @@ class reply(command):
             return
         message = history[index]
 
-        await message.reply("".join(args[0][0]))
+        await message.reply(" ".join(args[0]))

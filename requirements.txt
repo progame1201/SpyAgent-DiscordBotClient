@@ -1,9 +1,8 @@
-disnake~=2.10.1
-asyncio~=3.4.3
-pytz~=2023.3
-loguru~=0.7.0
 colorama~=0.4.6
-pyttsx3~=2.90
-future~=0.18.3
-keyboard~=0.13.5
+asyncio~=3.4.3
+disnake~=2.10.1
 aioconsole~=0.8.1
+future~=0.18.3
+pytz~=2023.3
+pillow~=10.4.0
+term_image~=0.7.2

@@ -1,13 +1,15 @@
-from disnake import *
-from aioconsole import ainput
 import conifg
-from Log import log, error, user_message
 import pytz
-from colorama import Fore
 import pickle
 import os
-from datetime import datetime
 
+from Log import log, error, user_message
+from colorama import Fore
+from disnake import *
+from aioconsole import ainput
+from term_image.image import AutoImage
+from PIL import Image
+from io import BytesIO
 
 async def async_int_input(prompt=""):
     while True:
@@ -71,7 +73,7 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
 
     if message.attachments:
         for attachment in message.attachments:
-            compiled_message += f"\n{Fore.YELLOW}↳attachment:{attachment.filename} ({attachment.url})"
+            compiled_message += f"\n{Fore.YELLOW}↳attachment: {attachment.url}"
     if show_ids:
         compiled_message += f"\n{Fore.YELLOW}↳channel id:{message.channel.id}, message id:{message.id}"
     if message.embeds:
@@ -88,11 +90,19 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
     return compiled_message
 
 
-async def show_history(channel):
+async def show_history(channel, draw_images=False):
     messages = await get_history(channel)
     for message in messages:
         user_message(await prepare_message(message, True))
+        if draw_images:
+            await draw_message_attachments(message)
 
+async def draw_message_attachments(message):
+    for attachment in message.attachments:
+        if conifg.DRAW_IMAGES and attachment.filename.split(".")[-1].lower() in ["png", "jpg", "jpeg"]:
+            img = Image.open(BytesIO(await attachment.read()))
+            img = AutoImage(img, height=8)
+            img.draw(h_align="left", v_align="top", pad_height=-100, animate=False)
 
 class Select_utils:
     def __init__(self, client: Client):
@@ -247,3 +257,4 @@ class mute_utils:
             if isinstance(mute, guild_mute):
                 guild_mutes.append(mute)
         return mute_pare(guild_mutes, channel_mutes)
+

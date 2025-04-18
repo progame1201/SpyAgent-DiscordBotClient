@@ -1,12 +1,13 @@
-from disnake import *
-from Log import log, user_message, event, error
-from utils import Select_utils, prepare_message, show_history, guild_mute, channel_mute, mute_utils
-from aioconsole import ainput
 import asyncio
 import conifg
-from Commands import *
 
-log("SpyAgent-DiscordBotClient 3.1.1, 2025, progame1201")
+from Commands import *
+from disnake import *
+from Log import log, user_message, event, error
+from utils import Select_utils, prepare_message, show_history, guild_mute, channel_mute, mute_utils, draw_message_attachments
+from aioconsole import ainput
+
+log("SpyAgent-DiscordBotClient 3.2.0, 2025, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = mute_utils.get_mutes()
@@ -32,7 +33,7 @@ async def on_ready():
 
     guild = await select_utils.select_guild()
     channel = await select_utils.select_channel(guild)
-    await show_history(channel)
+    await show_history(channel, draw_images=conifg.DRAW_IMAGES)
     asyncio.run_coroutine_threadsafe(message_sender(), client.loop)
 
 
@@ -44,7 +45,13 @@ async def on_message(message: Message):
     if message.channel in channel_mutes or message.guild in guild_mutes and message.channel != channel:
         return
 
-    user_message(await prepare_message(message, conifg.WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL))
+    user_message(
+        await prepare_message(
+            message,
+            conifg.WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL,
+        )
+    )
+    await draw_message_attachments(message)
 
 
 @client.event
@@ -72,7 +79,10 @@ async def on_message_delete(message: Message):
 async def on_message_edit(before, after):
     if channel.id == after.channel.id:
         event(
-            f"Message: {after.author}: {before.content[:40]} | has been changed to: {after.author}: {after.content[:40]}\n")
+            f"Message: {after.author}: {before.content if len(before.content) < 40 else f"{before.content[:40]}..."}"
+            f" | has been changed to: "
+            f"{after.content if len(after.content) < 40 else f"{after.content[:40]}..."}\n"
+        )
 
 
 @client.event
