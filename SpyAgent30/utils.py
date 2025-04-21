@@ -61,11 +61,14 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
             replied_message = await message.channel.fetch_message(message.reference.message_id)
 
             if len(replied_message.content) >= 60:
-                content = replied_message.content[:60]
+                content = f"{replied_message.content[:60]}..."
             else:
                 content = replied_message.content
 
-            compiled_message += f"\n{Fore.YELLOW}↳replies to the message: [{replied_message.author.name}] {content}"
+            compiled_message += (f"\n{Fore.YELLOW}↳replies to the message: "
+                                 f"[{replied_message.author.name}]"
+                                 f"{f" {content}" if content else ""}"
+                                 f"{" <attachments>" if replied_message.attachments else ""}")
         except NotFound:
             compiled_message += f"\n{Fore.YELLOW}↳replies to unknown message"
         except Exception as ex:
@@ -86,7 +89,10 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
                                  f"\n   ↳Fields titles {[str(field.name).replace("\n", "    ") for field in embed.fields]}"
                                  f"\n   ↳Fields values {[str(field.value).replace("\n", "    ") for field in embed.fields]}"
                                  f"\n   ↳Description   {str(embed.description).replace("\n", "    ")}")
-
+    if message.reactions:
+        compiled_message += f"\n{Fore.YELLOW}↳reactions: "
+        for reaction in message.reactions:
+            compiled_message += f"[{reaction.emoji} {reaction.count}]"
     return compiled_message
 
 

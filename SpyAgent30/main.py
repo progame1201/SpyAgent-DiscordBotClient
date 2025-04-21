@@ -7,7 +7,7 @@ from Log import log, user_message, event, error
 from utils import Select_utils, prepare_message, show_history, guild_mute, channel_mute, mute_utils, draw_message_attachments
 from aioconsole import ainput
 
-log("SpyAgent-DiscordBotClient 3.2.0, 2025, progame1201")
+log("SpyAgent-DiscordBotClient 3.2.1, 2025, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = mute_utils.get_mutes()
@@ -58,11 +58,12 @@ async def on_message(message: Message):
 async def on_reaction_add(reaction, user):
     if channel.id == reaction.message.channel.id:
         event(
-            f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: {reaction.message.content[:40]} | by {user.name}\n")
+            f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: "
+            f"{reaction.message.content if len(reaction.message.content) < 40 else f"{reaction.message.content[:40]}..."} | by {user.name}\n")
 
 
 @client.event
-async def on_reaction_remove(reaction):
+async def on_reaction_remove(reaction, user):
     if channel.id == reaction.message.channel.id:
         event(
             f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: "
@@ -72,16 +73,14 @@ async def on_reaction_remove(reaction):
 @client.event
 async def on_message_delete(message: Message):
     if channel.id == message.channel.id:
-        event(f"Message removed {message.author}: {message.content[:40]} \n")
+        event(f"Message removed {message.author}: {message.content} \n")
 
 
 @client.event
 async def on_message_edit(before, after):
     if channel.id == after.channel.id:
         event(
-            f"Message: {after.author}: {before.content if len(before.content) < 40 else f"{before.content[:40]}..."}"
-            f" | has been changed to: "
-            f"{after.content if len(after.content) < 40 else f"{after.content[:40]}..."}\n"
+            f"Message: {after.author}: {before.content} | has been changed to: {after.content}\n"
         )
 
 
