@@ -20,7 +20,6 @@ to find out all the commands and their functionality, you can type ***help<br>
 *(only in SpyAgent 2.x.x) You can open a window for entering commands by pressing F12 (default)* or by typing as a message. Example: ***help<br>
 __All commands work with the prefix `***`__ *(by default)*<br>
 
-### **In the mode of communication on servers:** <br>
 + help - help.
 + reset change the channel and guild<br>
 + file `<message>` - send file with message<br>
