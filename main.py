@@ -1,16 +1,16 @@
-import asyncio
 import conifg
-
-from Commands import *
+import asyncio
 from disnake import *
-from Log import log, user_message, event, error
-from utils import Select_utils, prepare_message, show_history, guild_mute, channel_mute, mute_utils, draw_message_attachments
+from commands import *
 from aioconsole import ainput
+from log import log, user_message, event, error
+from utils import SelectUtils, prepare_message, show_history, GuildMute, ChannelMute, MuteUtils, draw_message_attachments
 
-log("SpyAgent-DiscordBotClient 3.2.1, 2025, progame1201")
+
+log("SpyAgent-DiscordBotClient 3.3.0, 2025, progame1201")
 client = Client(intents=Intents.all())
 
-mutes = mute_utils.get_mutes()
+mutes = MuteUtils.get_mutes()
 
 guild_mutes = []
 channel_mutes = []
@@ -29,7 +29,7 @@ async def on_ready():
     global channel
 
     log(f"Logined in as {client.user.name}", show_time=True)
-    select_utils = Select_utils(client)
+    select_utils = SelectUtils(client)
 
     guild = await select_utils.select_guild()
     channel = await select_utils.select_channel(guild)
@@ -51,7 +51,8 @@ async def on_message(message: Message):
             conifg.WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL,
         )
     )
-    await draw_message_attachments(message)
+    if conifg.DRAW_IMAGES:
+        await draw_message_attachments(message)
 
 
 @client.event
@@ -63,7 +64,7 @@ async def on_reaction_add(reaction, user):
 
 
 @client.event
-async def on_reaction_remove(reaction, user):
+async def on_reaction_remove(reaction, *args):
     if channel.id == reaction.message.channel.id:
         event(
             f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: "
@@ -79,19 +80,17 @@ async def on_message_delete(message: Message):
 @client.event
 async def on_message_edit(before, after):
     if channel.id == after.channel.id:
-        event(
-            f"Message: {after.author}: {before.content} | has been changed to: {after.content}\n"
-        )
+        event(f"Message: {after.author}: {before.content} | has been changed to: {after.content}\n")
 
 
 @client.event
-async def on_guild_channel_delete(channel: channel):
+async def on_guild_channel_delete(channel: TextChannel):
     if channel.guild.id == guild.id:
         event(f"channel {channel.name} has been deleted\n")
 
 
 @client.event
-async def on_guild_channel_create(channel: channel):
+async def on_guild_channel_create(channel: TextChannel):
     if channel.guild.id == guild.id:
         event(f"channel {channel.name} has been created | id: {channel.id}\n")
 
@@ -106,7 +105,7 @@ async def on_guild_remove(guild):
     event(
         f"The guild: {guild.name} has been removed from the guild list (this could be due to: "
         f"The client has been banned. The client was kicked out. The guild owner deleted the guild. "
-        f"Or did you just quit the guild)\n")
+        f"Or did you just leave the guild)\n")
 
 
 @client.event
@@ -128,54 +127,54 @@ async def message_sender():
             if message == "help":
                 print()
                 log("HELP:")
-                for _command in get_commands(guild, channel, client):
-                    log(_command.description)
+                for command in get_commands(guild, channel, client):
+                    log(command.description)
                 print()
-            for _command in get_commands(guild, channel, client):
-                if message.split(" ")[0] != _command.name:
+            for command in get_commands(guild, channel, client):
+                if message.split(" ")[0] != command.name:
                     continue
 
-                if _command.name == "mute" or _command.name == "unmute":  # I tried to use isinstance, but it froze. Idk what the problem is.
-                    _command.channel_mutes = channel_mutes
-                    _command.guild_mutes = guild_mutes
-                    output: command_output = await _command.execute(message.split(" ")[1:])
+                if command.name == "mute" or command.name == "unmute":  # I tried to use isinstance, but it froze. Idk what the problem is.
+                    command.channel_mutes = channel_mutes
+                    command.guild_mutes = guild_mutes
+                    output: CommandOutput = await command.execute(message.split(" ")[1:])
 
-                elif _command.name == "vcdisconnect" or _command.name == "vcplay" or _command.name == "vcstop":
-                    _command.vc_clients = vc_clients
-                    output: command_output = await _command.execute(message.split(" ")[1:])
+                elif command.name == "vcdisconnect" or command.name == "vcplay" or command.name == "vcstop":
+                    command.vc_clients = vc_clients
+                    output: CommandOutput = await command.execute(message.split(" ")[1:])
 
                 else:
-                    output: command_output = await _command.execute(message.split(" ")[1:])
+                    output: CommandOutput = await command.execute(message.split(" ")[1:])
 
-                if isinstance(output, reset_output):
+                if isinstance(output, ResetOutput):
                     guild = output.guild
                     channel = output.channel
 
-                if isinstance(output, set_output):
+                if isinstance(output, SetOutput):
                     channel = output.channel
 
-                if isinstance(output, vcdisconnect_output):
+                if isinstance(output, VcDisconnectOutput):
                     vc_clients.remove(output.vc_client)
 
-                if isinstance(output, vcconnect_output):
+                if isinstance(output, VcConnectOutput):
                     vc_clients.append(output.vc_client)
 
-                if isinstance(output, mute_output):
-                    if isinstance(output.mute_object, channel_mute):
+                if isinstance(output, MuteOutput):
+                    if isinstance(output.mute_object, ChannelMute):
                         channel_mutes.append(output.mute_object.id)
 
-                    if isinstance(output.mute_object, guild_mute):
+                    if isinstance(output.mute_object, GuildMute):
                         guild_mutes.append(output.mute_object.id)
 
-                if isinstance(output, unmute_output):
+                if isinstance(output, UnmuteOutput):
 
-                    if isinstance(output.mute_object, channel_mute):
+                    if isinstance(output.mute_object, ChannelMute):
                         channel_mutes.remove(output.mute_object.id)
 
-                    if isinstance(output.mute_object, guild_mute):
+                    if isinstance(output.mute_object, GuildMute):
                         guild_mutes.remove(output.mute_object.id)
 
-                if isinstance(output, guildleave_output):
+                if isinstance(output, GuildLeaveOutput):
                     guild = output.guild
                     channel = output.channel
 

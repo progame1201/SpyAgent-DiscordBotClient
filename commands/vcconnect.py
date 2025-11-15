@@ -1,19 +1,19 @@
-from disnake import *
-from .command import command
-from .command_output import command_output
-from utils import show_history, Select_utils
-from Log import log
+from .command import Command
+from .commandoutput import CommandOutput
+from utils import SelectUtils
+from log import log
 
 
-class vcconnect_output(command_output):
+class VcConnectOutput(CommandOutput):
     def __init__(self, vc_client):
         super().__init__()
         self.vc_client = vc_client
 
-class vcconnect(command):
-    def __init__(self, guild:Guild, channel:TextChannel, client:Client):
-        super().__init__(guild, channel, client)
-        self.select_utils = Select_utils(client)
+
+class VcConnect(Command):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.select_utils = SelectUtils(self.client)
         self.description = f"{self.name} - connect to voice channel"
 
     async def execute(self, *args):
@@ -23,4 +23,4 @@ class vcconnect(command):
             return
         vc_client = await channel.connect()
         log("Connected")
-        return vcconnect_output(vc_client)
+        return VcConnectOutput(vc_client)

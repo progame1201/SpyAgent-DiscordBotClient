@@ -1,3 +1,3 @@
-class command_output():
+class CommandOutput:
     def __init__(self):
         pass

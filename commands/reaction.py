@@ -1,13 +1,12 @@
 from disnake import *
-from .command import command
+from .command import Command
 from utils import try_async_int_input, get_history, log, prepare_message, user_message
 from aioconsole import ainput
-from colorama import Fore
 
 
-class reaction(command):
-    def __init__(self, guild:Guild, channel:TextChannel, client:Client):
-        super().__init__(guild, channel, client)
+class Reaction(Command):
+    def __init__(self, *args):
+        super().__init__(*args)
         self.description = f"{self.name} <mode: 1 - choose the emoji yourself; 2 - Select an emoji from the list of all emojis> - Put a reaction under the message"
 
 
@@ -24,7 +23,7 @@ class reaction(command):
 
         index = await try_async_int_input("enter message index: ")
 
-        if index is None:
+        if index is False:
             log("You entered incorrect message index. the command will not continue execution.")
             return
         if len(history) - 1 < index or index < 0:

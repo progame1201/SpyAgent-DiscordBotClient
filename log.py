@@ -1,5 +1,6 @@
 from colorama import Fore, init
 from datetime import datetime
+
 init(autoreset=True)
 
 
@@ -9,14 +10,17 @@ def log(string, end="\n", show_time=False):
         return
     print(f"{Fore.CYAN}{string}", end=end)
 
-def user_message(string, end="\n", show_time=True):
+
+def user_message(string, end="\n"):
     print(f"{Fore.WHITE}{string}", end=end)
+
 
 def event(string, end="\n", show_time=True):
     if show_time:
         print(f"{Fore.LIGHTCYAN_EX}[{datetime.now()}] [EVENT] {string}", end=end)
         return
     print(f"{Fore.LIGHTCYAN_EX}[EVENT] {string}", end=end)
+
 
 def error(string, end="\n", show_time=True):
     if show_time:

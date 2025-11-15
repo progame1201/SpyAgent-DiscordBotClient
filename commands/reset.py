@@ -1,23 +1,24 @@
 from disnake import *
-from .command import command
-from .command_output import command_output
-from utils import show_history, Select_utils
+from .command import Command
+from .commandoutput import CommandOutput
+from utils import show_history, SelectUtils
 
 
-class reset_output(command_output):
+class ResetOutput(CommandOutput):
     def __init__(self, guild: Guild, channel: TextChannel):
         super().__init__()
         self.guild = guild
         self.channel = channel
 
-class reset(command):
-    def __init__(self, guild:Guild, channel:TextChannel, client:Client):
-        super().__init__(guild, channel, client)
-        self.select_utils = Select_utils(client)
+
+class Reset(Command):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.select_utils = SelectUtils(self.client)
         self.description = f"{self.name} - change the channel and guild"
 
     async def execute(self, *args):
         guild = await self.select_utils.select_guild()
         channel = await self.select_utils.select_channel(guild)
         await show_history(channel)
-        return reset_output(guild, channel)
+        return ResetOutput(guild, channel)

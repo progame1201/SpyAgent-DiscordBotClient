@@ -1,14 +1,13 @@
 from disnake import *
-from .command import command
-from Log import log
-from utils import Select_utils
+from .command import Command
+from utils import SelectUtils
 from tkinter.filedialog import askopenfilename
 
 
-class file(command):
-    def __init__(self, guild: Guild, channel: TextChannel, client: Client):
-        super().__init__(guild, channel, client)
-        self.select_utils = Select_utils(client)
+class File(Command):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.select_utils = SelectUtils(self.client)
         self.description = f"{self.name} <message> - send file with message"
 
     async def execute(self, *args):

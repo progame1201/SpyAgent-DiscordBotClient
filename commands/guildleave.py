@@ -1,21 +1,23 @@
 from disnake import *
-from .command import command
-from .command_output import command_output
-from utils import show_history, Select_utils
+from .command import Command
+from .commandoutput import CommandOutput
+from utils import show_history, SelectUtils
 from aioconsole import ainput
-from Log import log
+from log import log
 from colorama import Fore
 
-class guildleave_output(command_output):
+
+class GuildLeaveOutput(CommandOutput):
     def __init__(self, guild: Guild, channel: TextChannel):
         super().__init__()
         self.guild = guild
         self.channel = channel
 
-class guildleave(command):
-    def __init__(self, guild:Guild, channel:TextChannel, client:Client):
-        super().__init__(guild, channel, client)
-        self.select_utils = Select_utils(client)
+
+class GuildLeave(Command):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.select_utils = SelectUtils(self.client)
         self.description = f"{self.name} - choose a guild to exit it"
 
     async def execute(self, *args):
@@ -32,8 +34,8 @@ class guildleave(command):
         else:
             log(f"{Fore.WHITE}You entered name incorrect")
             return
-        if guild.id == self.guild.id:
-            guild = await self.select_utils.select_guild()
-            channel = await self.select_utils.select_channel(guild)
-            await show_history(channel)
-            return guildleave_output(guild, channel)
+        # if guild.id == self.guild.id:
+        #     guild = await self.select_utils.select_guild()
+        #     channel = await self.select_utils.select_channel(guild)
+        #     await show_history(channel)
+        #     return GuildLeaveOutput(guild, channel)

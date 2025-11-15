@@ -1,15 +1,15 @@
-import conifg
-import pytz
-import pickle
 import os
-
-from Log import log, error, user_message
-from colorama import Fore
+import pytz
+import conifg
+import pickle
+from PIL import Image
 from disnake import *
+from io import BytesIO
+from colorama import Fore
 from aioconsole import ainput
 from term_image.image import AutoImage
-from PIL import Image
-from io import BytesIO
+from log import log, error, user_message
+
 
 async def async_int_input(prompt=""):
     while True:
@@ -22,12 +22,11 @@ async def async_int_input(prompt=""):
 
 
 async def try_async_int_input(prompt=""):
-    while True:
-        try:
-            num = int(await ainput(prompt))
-            return num
-        except:
-            return False
+    try:
+        num = int(await ainput(prompt))
+        return num
+    except:
+        return False
 
 
 async def get_history(channel, limit=50):
@@ -37,9 +36,7 @@ async def get_history(channel, limit=50):
             messages.append(message)
     except Forbidden:
         error(f"It's impossible to get: Forbidden.")
-        return False
-    messages.reverse()
-    return messages
+    return reversed(messages)
 
 
 async def prepare_message(message: Message, only_write_messages_from_selected_channel=True, show_ids=False):
@@ -103,51 +100,56 @@ async def show_history(channel, draw_images=False):
         if draw_images:
             await draw_message_attachments(message)
 
+
 async def draw_message_attachments(message):
     for attachment in message.attachments:
-        if conifg.DRAW_IMAGES and attachment.filename.split(".")[-1].lower() in ["png", "jpg", "jpeg"]:
+        if conifg.DRAW_IMAGES and os.path.splitext(attachment.filename)[1].lower().lower() in [".png", ".jpg", ".jpeg"]:
             img = Image.open(BytesIO(await attachment.read()))
             img = AutoImage(img, height=8)
             img.draw(h_align="left", v_align="top", pad_height=-100, animate=False)
 
-class Select_utils:
+
+class SelectUtils:
     def __init__(self, client: Client):
         self.client: Client = client
 
     async def select_guild(self, stop_if_error=False, to_skip=None) -> Guild | None:
         if to_skip is None:
             to_skip = []
+        have_guilds = False
+
         log("Please, select guild from this list:")
-        guilds = False
         for i, guild in enumerate(self.client.guilds):
             if guild.id in to_skip:
                 continue
-            guilds = True
+            have_guilds = True
             log(f"{i} - {guild.name} (id: {guild.id}, {guild.member_count} members)")
-        if not guilds:
-            return
-        while True:
-            try:
-                if stop_if_error:
-                    return self.client.guilds[await try_async_int_input("Enter the guild index:")]
-                else:
-                    return self.client.guilds[await async_int_input("Enter the guild index:")]
-            except:
-                if stop_if_error:
-                    return
-                print("Enter a valid index")
-                pass
 
-    async def select_channel(self, guild: Guild, stop_if_error=False, to_skip=None,
+        if not have_guilds:
+            return
+
+        try:
+            if stop_if_error:
+                return self.client.guilds[await try_async_int_input("Enter the guild index:")]
+            else:
+                return self.client.guilds[await async_int_input("Enter the guild index:")]
+        except:
+            if stop_if_error:
+                return
+            print("Enter a valid index")
+
+    @staticmethod
+    async def select_channel(guild: Guild, stop_if_error=False, to_skip=None,
                              show_threads=True) -> TextChannel | None:
         if to_skip is None:
             to_skip = []
+        have_channels = False
+
         log("Please, select channel from this list:")
-        channels = False
         for i, channel in enumerate(guild.text_channels):
             if channel.id in to_skip:
                 continue
-            channels = True
+            have_channels = True
             log(f"{i} - {channel.name} (id: {channel.id})")
             try:
                 if channel.threads and show_threads:
@@ -156,24 +158,27 @@ class Select_utils:
                         log(f"  ↳{thread.name} (id: {thread.id})")
             except Exception as ex:
                 print(ex)
-        if not channels:
-            return
-        while True:
-            try:
-                if stop_if_error:
-                    return guild.text_channels[await try_async_int_input("Enter the channel index:")]
-                else:
-                    return guild.text_channels[await async_int_input("Enter the channel index:")]
-            except:
-                if stop_if_error:
-                    return
-                print("Enter a valid index")
 
-    async def select_vc_channel(self, guild: Guild, stop_if_error=False, to_skip=None, ) -> VoiceChannel | None:
+        if not have_channels:
+            return
+
+        try:
+            if stop_if_error:
+                return guild.text_channels[await try_async_int_input("Enter the channel index:")]
+            else:
+                return guild.text_channels[await async_int_input("Enter the channel index:")]
+        except:
+            if stop_if_error:
+                return
+            print("Enter a valid index")
+
+    @staticmethod
+    async def select_vc_channel(guild: Guild, stop_if_error=False, to_skip=None, ) -> VoiceChannel | None:
         if to_skip is None:
             to_skip = []
-        log("Please, select channel from this list:")
         channels = False
+
+        log("Please, select channel from this list:")
         for i, channel in enumerate(guild.voice_channels):
             if channel.id in to_skip:
                 continue
@@ -181,35 +186,35 @@ class Select_utils:
             log(f"{i} - {channel.name} {[member.name for member in channel.members]}")
         if not channels:
             return
-        while True:
-            try:
-                if stop_if_error:
-                    return guild.voice_channels[await try_async_int_input("Enter the channel index:")]
-                else:
-                    return guild.voice_channels[await async_int_input("Enter the channel index:")]
-            except:
-                if stop_if_error:
-                    return
-                print("Enter a valid index")
+
+        try:
+            if stop_if_error:
+                return guild.voice_channels[await try_async_int_input("Enter the channel index:")]
+            else:
+                return guild.voice_channels[await async_int_input("Enter the channel index:")]
+        except:
+            if stop_if_error:
+                return
+            print("Enter a valid index")
 
 
-class guild_mute:
+class GuildMute:
     def __init__(self, id):
         self.id = id
 
 
-class channel_mute:
+class ChannelMute:
     def __init__(self, id):
         self.id = id
 
 
-class mute_pare():
+class MutePare:
     def __init__(self, guilds_list, channels_list):
         self.guilds = guilds_list
         self.channels = channels_list
 
 
-class mute_utils:
+class MuteUtils:
     def __init__(self):
         pass
 
@@ -225,7 +230,7 @@ class mute_utils:
 
     @staticmethod
     def add_mute(mute_object):
-        mutes = mute_utils._read_mutes()
+        mutes = MuteUtils._read_mutes()
         mutes.append(mute_object)
         with open("mutes", 'wb') as f:
             f.write(pickle.dumps(mutes))
@@ -233,7 +238,7 @@ class mute_utils:
     @staticmethod
     def remove_mute(mute_object):
         try:
-            mutes = mute_utils._read_mutes()
+            mutes = MuteUtils._read_mutes()
             mutes.remove(mute_object)
         except:
             return
@@ -243,7 +248,7 @@ class mute_utils:
     @staticmethod
     def remove_mute_by_id(id):
         try:
-            mutes = mute_utils._read_mutes()
+            mutes = MuteUtils._read_mutes()
             for mute in mutes:
                 if mute.id == id:
                     mutes.remove(mute)
@@ -254,13 +259,12 @@ class mute_utils:
 
     @staticmethod
     def get_mutes():
-        mutes = mute_utils._read_mutes()
+        mutes = MuteUtils._read_mutes()
         guild_mutes = []
         channel_mutes = []
         for mute in mutes:
-            if isinstance(mute, channel_mute):
+            if isinstance(mute, ChannelMute):
                 channel_mutes.append(mute)
-            if isinstance(mute, guild_mute):
+            if isinstance(mute, GuildMute):
                 guild_mutes.append(mute)
-        return mute_pare(guild_mutes, channel_mutes)
-
+        return MutePare(guild_mutes, channel_mutes)

@@ -1,14 +1,11 @@
-from disnake import *
-from .command import command
+from .command import Command
 from utils import try_async_int_input, get_history, log, prepare_message, user_message
-from colorama import Fore
 
 
-class delete(command):
-    def __init__(self, guild:Guild, channel:TextChannel, client:Client):
-        super().__init__(guild, channel, client)
+class Delete(Command):
+    def __init__(self, *args):
+        super().__init__(*args)
         self.description = f"{self.name} - delete a message"
-
 
     async def execute(self, *args):
         history = await get_history(self.channel, limit=50)
@@ -18,7 +15,7 @@ class delete(command):
             user_message(f"{i} - {await prepare_message(message)}")
 
         index = await try_async_int_input("enter message index: ")
-        if index is None:
+        if index is False:
             log("You entered incorrect message index. the command will not continue execution.")
             return
 
