@@ -1,8 +1,8 @@
 colorama~=0.4.6
 asyncio~=4.0.0
-disnake~=2.11.0
+disnake~=2.12.0
 aioconsole~=0.8.1
 pytz~=2025.2
-pillow~=10.4.0
+pillow~=12.1.1
 term_image~=0.7.2
 pynacl~=1.6.1
