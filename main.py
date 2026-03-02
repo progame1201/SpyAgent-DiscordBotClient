@@ -7,7 +7,7 @@ from log import log, user_message, event, error
 from utils import SelectUtils, prepare_message, show_history, GuildMute, ChannelMute, MuteUtils, draw_message_attachments
 
 
-log("SpyAgent-DiscordBotClient 3.3.0, 2025, progame1201")
+log("SpyAgent-DiscordBotClient 3.4.0, 2026, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = MuteUtils.get_mutes()
@@ -15,6 +15,8 @@ mutes = MuteUtils.get_mutes()
 guild_mutes = []
 channel_mutes = []
 vc_clients = []
+guild: Guild | None = None
+channel: TextChannel | None = None
 
 for mute in mutes.channels:
     channel_mutes.append(mute.id)
@@ -22,13 +24,11 @@ for mute in mutes.guilds:
     guild_mutes.append(mute.id)
 log(f"Loaded mutes: {channel_mutes}, {guild_mutes}")
 
-
 @client.event
 async def on_ready():
-    global guild
-    global channel
+    global guild, channel
 
-    log(f"Logined in as {client.user.name}", show_time=True)
+    log(f"Logged in as {client.user.name}", show_time=True)
     select_utils = SelectUtils(client)
 
     guild = await select_utils.select_guild()
@@ -36,24 +36,17 @@ async def on_ready():
     await show_history(channel, draw_images=conifg.DRAW_IMAGES)
     asyncio.run_coroutine_threadsafe(message_sender(), client.loop)
 
-
 @client.event
 async def on_message(message: Message):
-    if conifg.WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL and message.channel != channel:
+    if conifg.WRITE_MSGS_FROM_SEL_CH and message.channel != channel:
         return
 
     if message.channel in channel_mutes or message.guild in guild_mutes and message.channel != channel:
         return
 
-    user_message(
-        await prepare_message(
-            message,
-            conifg.WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL,
-        )
-    )
+    user_message(await prepare_message(message, conifg.WRITE_MSGS_FROM_SEL_CH))
     if conifg.DRAW_IMAGES:
         await draw_message_attachments(message)
-
 
 @client.event
 async def on_reaction_add(reaction, user):
@@ -62,7 +55,6 @@ async def on_reaction_add(reaction, user):
             f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: "
             f"{reaction.message.content if len(reaction.message.content) < 40 else f"{reaction.message.content[:40]}..."} | by {user.name}\n")
 
-
 @client.event
 async def on_reaction_remove(reaction, *args):
     if channel.id == reaction.message.channel.id:
@@ -70,43 +62,36 @@ async def on_reaction_remove(reaction, *args):
             f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: "
             f"{reaction.message.content if len(reaction.message.content) < 40 else f"{reaction.message.content[:40]}..."}\n")
 
-
 @client.event
 async def on_message_delete(message: Message):
     if channel.id == message.channel.id:
         event(f"Message removed {message.author}: {message.content} \n")
-
 
 @client.event
 async def on_message_edit(before, after):
     if channel.id == after.channel.id:
         event(f"Message: {after.author}: {before.content} | has been changed to: {after.content}\n")
 
-
 @client.event
 async def on_guild_channel_delete(channel: TextChannel):
     if channel.guild.id == guild.id:
         event(f"channel {channel.name} has been deleted\n")
-
 
 @client.event
 async def on_guild_channel_create(channel: TextChannel):
     if channel.guild.id == guild.id:
         event(f"channel {channel.name} has been created | id: {channel.id}\n")
 
-
 @client.event
 async def on_guild_join(guild):
     event(f"Client was joined to the {guild.name} guild")
-
 
 @client.event
 async def on_guild_remove(guild):
     event(
         f"The guild: {guild.name} has been removed from the guild list (this could be due to: "
-        f"The client has been banned. The client was kicked out. The guild owner deleted the guild. "
-        f"Or did you just leave the guild)\n")
-
+        f"The bot has been banned. The bot was kicked out. The guild owner deleted the guild. "
+        f"Or you just left the guild)\n")
 
 @client.event
 async def on_voice_state_update(member: Member, before, after):
@@ -116,10 +101,8 @@ async def on_voice_state_update(member: Member, before, after):
         elif before.channel is not None and after.channel is None:
             event(f'{member.name} left voice channel {before.channel}')
 
-
 async def message_sender():
-    global guild
-    global channel
+    global guild, channel
     while True:
         message: str = await ainput("")
         if message.lower().startswith(conifg.COMMAND_PREFIX):

@@ -1,7 +1,7 @@
 from disnake import *
 from .command import Command
 import os
-from utils import SelectUtils, try_async_int_input
+from utils import SelectUtils, async_int_input, is_valid_index
 from log import log
 from tkinter.filedialog import askopenfilename
 
@@ -22,11 +22,9 @@ class VcPlay(Command):
     async def execute(self, *args):
         for i, vc_client in enumerate(self.vc_clients):
             log(f"{i} - {vc_client.channel} {[member.name for member in vc_client.channel.members]}")
-        index = await try_async_int_input()
-        if index is False:
-            log("You entered incorrect message index. the command will not continue execution.")
-        if len(self.vc_clients) - 1 > index or index < 0:
-            log("You entered incorrect message index. the command will not continue execution.")
+        index = await async_int_input()
+        if not is_valid_index(index, self.vc_clients):
+            return
 
         vc_client = self.vc_clients[index]
 

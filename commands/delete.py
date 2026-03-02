@@ -1,5 +1,5 @@
 from .command import Command
-from utils import try_async_int_input, get_history, log, prepare_message, user_message
+from utils import async_int_input, get_history, log, prepare_message, user_message, is_valid_index
 
 
 class Delete(Command):
@@ -14,13 +14,8 @@ class Delete(Command):
         for i, message in enumerate(history):
             user_message(f"{i} - {await prepare_message(message)}")
 
-        index = await try_async_int_input("enter message index: ")
-        if index is False:
-            log("You entered incorrect message index. the command will not continue execution.")
-            return
-
-        if len(history) - 1 < index or index < 0:
-            log("You entered incorrect message index. the command will not continue execution.")
+        index = await async_int_input("enter message index: ")
+        if not is_valid_index(index, history):
             return
         message = history[index]
 

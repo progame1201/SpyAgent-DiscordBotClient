@@ -8,26 +8,28 @@ from io import BytesIO
 from colorama import Fore
 from aioconsole import ainput
 from term_image.image import AutoImage
-from log import log, error, user_message
+from log import log, error, user_message, warn
 
 
-async def async_int_input(prompt=""):
-    while True:
-        try:
-            num = int(await ainput(prompt))
-            return num
-        except:
-            log("enter a number, not text")
-            pass
-
-
-async def try_async_int_input(prompt=""):
-    try:
-        num = int(await ainput(prompt))
-        return num
-    except:
+def is_valid_index(index, obj_list):
+    if index is None:
+        log("You entered incorrect index. the command will not continue execution.")
         return False
 
+    if len(obj_list) - 1 < index or index < 0:
+        log("You entered incorrect index. the command will not continue execution.")
+        return False
+
+    return True
+
+async def async_int_input(prompt="", one_attempt=True):
+    while True:
+        try:
+            return int(await ainput(prompt))
+        except:
+            if one_attempt:
+                return None
+            log("enter a number, not text")
 
 async def get_history(channel, limit=50):
     messages = []
@@ -37,7 +39,6 @@ async def get_history(channel, limit=50):
     except Forbidden:
         error(f"It's impossible to get: Forbidden.")
     return reversed(messages)
-
 
 async def prepare_message(message: Message, only_write_messages_from_selected_channel=True, show_ids=False):
     if "\n" in message.content:
@@ -90,8 +91,8 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
         compiled_message += f"\n{Fore.YELLOW}↳reactions: "
         for reaction in message.reactions:
             compiled_message += f"[{reaction.emoji} {reaction.count}]"
-    return compiled_message
 
+    return compiled_message
 
 async def show_history(channel, draw_images=False):
     messages = await get_history(channel)
@@ -100,14 +101,12 @@ async def show_history(channel, draw_images=False):
         if draw_images:
             await draw_message_attachments(message)
 
-
 async def draw_message_attachments(message):
     for attachment in message.attachments:
         if conifg.DRAW_IMAGES and os.path.splitext(attachment.filename)[1].lower().lower() in [".png", ".jpg", ".jpeg"]:
             img = Image.open(BytesIO(await attachment.read()))
             img = AutoImage(img, height=8)
             img.draw(h_align="left", v_align="top", pad_height=-100, animate=False)
-
 
 class SelectUtils:
     def __init__(self, client: Client):
@@ -116,6 +115,7 @@ class SelectUtils:
     async def select_guild(self, stop_if_error=False, to_skip=None) -> Guild | None:
         if to_skip is None:
             to_skip = []
+
         have_guilds = False
 
         log("Please, select guild from this list:")
@@ -126,23 +126,20 @@ class SelectUtils:
             log(f"{i} - {guild.name} (id: {guild.id}, {guild.member_count} members)")
 
         if not have_guilds:
+            log("Your bot doesn't have any guilds.")
             return
 
         try:
-            if stop_if_error:
-                return self.client.guilds[await try_async_int_input("Enter the guild index:")]
-            else:
-                return self.client.guilds[await async_int_input("Enter the guild index:")]
+            return self.client.guilds[await async_int_input("Enter the guild index:", stop_if_error)]
         except:
-            if stop_if_error:
-                return
-            print("Enter a valid index")
+            warn("You entered an invalid index")
 
     @staticmethod
     async def select_channel(guild: Guild, stop_if_error=False, to_skip=None,
                              show_threads=True) -> TextChannel | None:
         if to_skip is None:
             to_skip = []
+
         have_channels = False
 
         log("Please, select channel from this list:")
@@ -160,17 +157,13 @@ class SelectUtils:
                 print(ex)
 
         if not have_channels:
+            log("Guild doesn't have any channels.")
             return
 
         try:
-            if stop_if_error:
-                return guild.text_channels[await try_async_int_input("Enter the channel index:")]
-            else:
-                return guild.text_channels[await async_int_input("Enter the channel index:")]
+            return guild.text_channels[await async_int_input("Enter the channel index:", stop_if_error)]
         except:
-            if stop_if_error:
-                return
-            print("Enter a valid index")
+            warn("You entered an invalid index")
 
     @staticmethod
     async def select_vc_channel(guild: Guild, stop_if_error=False, to_skip=None, ) -> VoiceChannel | None:
@@ -184,35 +177,28 @@ class SelectUtils:
                 continue
             channels = True
             log(f"{i} - {channel.name} {[member.name for member in channel.members]}")
+
         if not channels:
+            log("Guild doesn't have any voice channels.")
             return
 
         try:
-            if stop_if_error:
-                return guild.voice_channels[await try_async_int_input("Enter the channel index:")]
-            else:
-                return guild.voice_channels[await async_int_input("Enter the channel index:")]
+            return guild.voice_channels[await async_int_input("Enter the channel index:", stop_if_error)]
         except:
-            if stop_if_error:
-                return
-            print("Enter a valid index")
-
+            warn("You entered an invalid index")
 
 class GuildMute:
     def __init__(self, id):
         self.id = id
 
-
 class ChannelMute:
     def __init__(self, id):
         self.id = id
-
 
 class MutePare:
     def __init__(self, guilds_list, channels_list):
         self.guilds = guilds_list
         self.channels = channels_list
-
 
 class MuteUtils:
     def __init__(self):

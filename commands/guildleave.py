@@ -34,8 +34,3 @@ class GuildLeave(Command):
         else:
             log(f"{Fore.WHITE}You entered name incorrect")
             return
-        # if guild.id == self.guild.id:
-        #     guild = await self.select_utils.select_guild()
-        #     channel = await self.select_utils.select_channel(guild)
-        #     await show_history(channel)
-        #     return GuildLeaveOutput(guild, channel)

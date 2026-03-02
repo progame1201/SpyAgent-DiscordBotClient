@@ -1,6 +1,6 @@
 from disnake import *
 from .command import Command
-from utils import try_async_int_input, get_history, log, prepare_message, user_message
+from utils import async_int_input, get_history, log, prepare_message, user_message, is_valid_index
 from aioconsole import ainput
 
 
@@ -12,22 +12,17 @@ class Reaction(Command):
 
     async def execute(self, *args):
         if not args[0]:
-            log("You entered incorrect reaction mode. the command will not continue execution.")
+            log("You entered incorrect reaction mode. Available modes: 1 - choose the emoji yourself; 2 - Select an emoji from the list of all emojis")
             return
         args = args[0]
 
-        history = await get_history(self.channel, limit=50)
+        history = list(await get_history(self.channel, limit=50))
 
         for i, message in enumerate(history):
             user_message(f"{i} - {await prepare_message(message)}")
 
-        index = await try_async_int_input("enter message index: ")
-
-        if index is False:
-            log("You entered incorrect message index. the command will not continue execution.")
-            return
-        if len(history) - 1 < index or index < 0:
-            log("You entered incorrect message index. the command will not continue execution.")
+        index = await async_int_input("enter message index: ")
+        if not is_valid_index(index, history):
             return
 
         message:Message = history[index]
@@ -39,12 +34,9 @@ class Reaction(Command):
             for i, emoji in enumerate(self.client.emojis):
                 log(f'{i}: {emoji.name} - {emoji.url}')
 
-            index = await try_async_int_input("enter emoji index: ")
-
-            if not index:
-                log("You entered incorrect emoji index. the command will not continue execution.")
-            if len(self.client.emojis) - 1 < index or index < 0:
-                log("You entered incorrect emoji index. the command will not continue execution.")
+            index = await async_int_input("enter emoji index: ")
+            if not is_valid_index(index, self.client.emojis):
+                return
 
             emoji = self.client.emojis[index]
         else:

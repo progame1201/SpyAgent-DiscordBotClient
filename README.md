@@ -21,7 +21,7 @@ to find out all the commands and their functionality, you can type ***help<br>
 __All commands work with the prefix `***`__ *(by default)*<br>
 
 + help - help.
-+ reset change the channel and guild<br>
++ reset - change the channel and guild<br>
 + file `<message>` - send file with message<br>
 + mute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - select a channel or guild for mute<br>
 + unmute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - remove the channel or guild from mute <br>

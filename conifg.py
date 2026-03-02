@@ -1,6 +1,6 @@
 TOKEN = ""
 
-WRITE_MESSAGES_ONLY_FROM_SELECTED_CHANNEL = True
+WRITE_MSGS_FROM_SEL_CH = True  # write messages only from selected channel
 COMMAND_PREFIX = "***"
 TIMEZONE = "Europe/Moscow"
 DRAW_IMAGES = True  # Enables drawing images with ASCII art
