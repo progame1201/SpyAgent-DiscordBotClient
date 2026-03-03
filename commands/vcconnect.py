@@ -17,7 +17,7 @@ class VcConnect(Command):
         self.description = f"{self.name} - connect to voice channel"
 
     async def execute(self, *args):
-        channel = await self.select_utils.select_vc_channel(self.guild)
+        channel = await self.select_utils.select_channel(self.guild, channel_type="vc")
         if not channel:
             log("You entered incorrect channel index. the command will not continue execution.")
             return

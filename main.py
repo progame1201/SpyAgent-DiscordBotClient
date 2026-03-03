@@ -7,7 +7,7 @@ from log import log, user_message, event, error
 from utils import SelectUtils, prepare_message, show_history, GuildMute, ChannelMute, MuteUtils, draw_message_attachments
 
 
-log("SpyAgent-DiscordBotClient 3.4.0, 2026, progame1201")
+log("SpyAgent-DiscordBotClient 3.4.1, 2026, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = MuteUtils.get_mutes()

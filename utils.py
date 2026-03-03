@@ -42,11 +42,12 @@ async def get_history(channel, limit=50):
 
 async def prepare_message(message: Message, only_write_messages_from_selected_channel=True, show_ids=False):
     if "\n" in message.content:
-        content = "\n║" + message.content.replace("\n", "\n║")
+        content = "\n↳║" + message.content.replace("\n", "\n ║")
     else:
         content = message.content
-    created_at = message.created_at.astimezone(pytz.timezone(conifg.TIMEZONE))
-    compiled_message = f"({created_at.year}-{created_at.month}-{created_at.day} {created_at.hour}:{created_at.minute}:{created_at.second}) "
+
+    created_at = message.created_at.astimezone(pytz.timezone(conifg.TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S")
+    compiled_message = f"({created_at}) "
 
     if not only_write_messages_from_selected_channel:
         compiled_message += f"[{message.guild.name}] [{message.channel.name}] [{message.author.name}] {content}"
@@ -54,18 +55,19 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
         compiled_message += f"[DM] [{message.author.name}] {content}"
     else:
         compiled_message += f"[{message.author.name}] {content}"
+
     if message.reference and message.reference.message_id:
         try:
             replied_message = await message.channel.fetch_message(message.reference.message_id)
 
             if len(replied_message.content) >= 60:
-                content = f"{replied_message.content[:60]}..."
+                replied_content = f"{replied_message.content[:60]}..."
             else:
-                content = replied_message.content
+                replied_content = replied_message.content
 
             compiled_message += (f"\n{Fore.YELLOW}↳replies to the message: "
                                  f"[{replied_message.author.name}]"
-                                 f"{f" {content}" if content else ""}"
+                                 f"{replied_content}"
                                  f"{" <attachments>" if replied_message.attachments else ""}")
         except NotFound:
             compiled_message += f"\n{Fore.YELLOW}↳replies to unknown message"
@@ -116,37 +118,43 @@ class SelectUtils:
         if to_skip is None:
             to_skip = []
 
-        have_guilds = False
+        guilds = [guild for guild in self.client.guilds if guild.id not in to_skip]
 
-        log("Please, select guild from this list:")
-        for i, guild in enumerate(self.client.guilds):
-            if guild.id in to_skip:
-                continue
-            have_guilds = True
-            log(f"{i} - {guild.name} (id: {guild.id}, {guild.member_count} members)")
-
-        if not have_guilds:
+        if len(guilds) == 0:
             log("Your bot doesn't have any guilds.")
             return
 
+        log("Please, select guild from this list:")
+        for i, guild in enumerate(guilds):
+            log(f"{i} - {guild.name} (id: {guild.id}, {guild.member_count} members)")
+
         try:
-            return self.client.guilds[await async_int_input("Enter the guild index:", stop_if_error)]
+            return guilds[await async_int_input("Enter the guild index:", stop_if_error)]
         except:
             warn("You entered an invalid index")
 
     @staticmethod
     async def select_channel(guild: Guild, stop_if_error=False, to_skip=None,
-                             show_threads=True) -> TextChannel | None:
+                             show_threads=True, channel_type="text") -> TextChannel | None:
         if to_skip is None:
             to_skip = []
 
-        have_channels = False
+
+        match channel_type:
+            case "text":
+                channels = guild.text_channels
+            case "vc":
+                channels = guild.voice_channels
+            case _:
+                raise ValueError("channel_type can only be text or vc")
+
+        channels = [channel for channel in channels if channel.id not in to_skip]
+        if len(channels) == 0:
+            log(f"Guild doesn't have any {channel_type} channels.")
+            return
 
         log("Please, select channel from this list:")
-        for i, channel in enumerate(guild.text_channels):
-            if channel.id in to_skip:
-                continue
-            have_channels = True
+        for i, channel in enumerate(channels):
             log(f"{i} - {channel.name} (id: {channel.id})")
             try:
                 if channel.threads and show_threads:
@@ -155,35 +163,8 @@ class SelectUtils:
                         log(f"  ↳{thread.name} (id: {thread.id})")
             except Exception as ex:
                 print(ex)
-
-        if not have_channels:
-            log("Guild doesn't have any channels.")
-            return
-
         try:
-            return guild.text_channels[await async_int_input("Enter the channel index:", stop_if_error)]
-        except:
-            warn("You entered an invalid index")
-
-    @staticmethod
-    async def select_vc_channel(guild: Guild, stop_if_error=False, to_skip=None, ) -> VoiceChannel | None:
-        if to_skip is None:
-            to_skip = []
-        channels = False
-
-        log("Please, select channel from this list:")
-        for i, channel in enumerate(guild.voice_channels):
-            if channel.id in to_skip:
-                continue
-            channels = True
-            log(f"{i} - {channel.name} {[member.name for member in channel.members]}")
-
-        if not channels:
-            log("Guild doesn't have any voice channels.")
-            return
-
-        try:
-            return guild.voice_channels[await async_int_input("Enter the channel index:", stop_if_error)]
+            return channels[await async_int_input("Enter the channel index:", stop_if_error)]
         except:
             warn("You entered an invalid index")
 
