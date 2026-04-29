@@ -1,6 +1,7 @@
 from .command import Command
 from .commandoutput import CommandOutput
-from utils import log, SelectUtils, MuteUtils, ChannelMute, GuildMute
+from utils import log, SelectUtils
+from mutes import MuteUtils, ChannelMute, GuildMute
 
 
 class MuteOutput(CommandOutput):

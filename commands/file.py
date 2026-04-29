@@ -1,4 +1,4 @@
-from disnake import *
+import disnake
 from .command import Command
 from utils import SelectUtils
 from tkinter.filedialog import askopenfilename
@@ -14,4 +14,4 @@ class File(Command):
         path = askopenfilename(title="select file")
         if not path:
             return
-        await self.channel.send(content=" ".join(args[0]), file=File(path))
+        await self.channel.send(content=" ".join(args[0]), file=disnake.File(path))

@@ -1,13 +1,16 @@
-import conifg
 import asyncio
+
 from disnake import *
 from commands import *
 from aioconsole import ainput
+
+import conifg
 from log import log, user_message, event, error
-from utils import SelectUtils, prepare_message, show_history, GuildMute, ChannelMute, MuteUtils, draw_message_attachments
+from mutes import GuildMute, ChannelMute, MuteUtils
+from utils import SelectUtils, prepare_message, show_history, cut_text, draw_message_attachments
 
 
-log("SpyAgent-DiscordBotClient 3.4.1, 2026, progame1201")
+log("SpyAgent-DiscordBotClient 3.4.2, 2026, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = MuteUtils.get_mutes()
@@ -38,11 +41,11 @@ async def on_ready():
 
 @client.event
 async def on_message(message: Message):
-    if conifg.WRITE_MSGS_FROM_SEL_CH and message.channel != channel:
+    if conifg.WRITE_MSGS_FROM_SEL_CH and message.channel.id != channel.id:
         return
-
-    if message.channel in channel_mutes or message.guild in guild_mutes and message.channel != channel:
-        return
+    if not isinstance(message.channel, DMChannel):
+        if (message.channel.id in channel_mutes or message.guild.id in guild_mutes) and message.channel.id != channel.id:
+            return
 
     user_message(await prepare_message(message, conifg.WRITE_MSGS_FROM_SEL_CH))
     if conifg.DRAW_IMAGES:
@@ -53,14 +56,14 @@ async def on_reaction_add(reaction, user):
     if channel.id == reaction.message.channel.id:
         event(
             f"Reaction {reaction.emoji} | was added to: {reaction.message.author}: "
-            f"{reaction.message.content if len(reaction.message.content) < 40 else f"{reaction.message.content[:40]}..."} | by {user.name}\n")
+            f"{cut_text(reaction.message.content)} | by {user.name}\n")
 
 @client.event
 async def on_reaction_remove(reaction, *args):
     if channel.id == reaction.message.channel.id:
         event(
             f"Reaction {reaction.emoji} | was removed from: {reaction.message.author}: "
-            f"{reaction.message.content if len(reaction.message.content) < 40 else f"{reaction.message.content[:40]}..."}\n")
+            f"{cut_text(reaction.message.content)}\n")
 
 @client.event
 async def on_message_delete(message: Message):

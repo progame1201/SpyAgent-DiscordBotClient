@@ -1,14 +1,15 @@
 import os
-import pytz
-import conifg
-import pickle
-from PIL import Image
-from disnake import *
 from io import BytesIO
+
+import pytz
+from disnake import *
+from PIL import Image
 from colorama import Fore
 from aioconsole import ainput
 from term_image.image import AutoImage
+
 from log import log, error, user_message, warn
+import conifg
 
 
 def is_valid_index(index, obj_list):
@@ -40,6 +41,12 @@ async def get_history(channel, limit=50):
         error(f"It's impossible to get: Forbidden.")
     return reversed(messages)
 
+def flatten_newlines(text) -> str:
+    return str(text).replace("\n", "    ")
+
+def cut_text(text, max_length=40) -> str:
+    return text if len(text) < max_length else f"{text[:max_length]}..."
+    
 async def prepare_message(message: Message, only_write_messages_from_selected_channel=True, show_ids=False):
     if "\n" in message.content:
         content = "\n↳║" + message.content.replace("\n", "\n ║")
@@ -68,7 +75,7 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
             compiled_message += (f"\n{Fore.YELLOW}↳replies to the message: "
                                  f"[{replied_message.author.name}]"
                                  f"{replied_content}"
-                                 f"{" <attachments>" if replied_message.attachments else ""}")
+                                 f"{' <attachments>' if replied_message.attachments else ''}")
         except NotFound:
             compiled_message += f"\n{Fore.YELLOW}↳replies to unknown message"
         except Exception as ex:
@@ -83,12 +90,18 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
         for embed in message.embeds:
             if not embed.fields and not embed.title and not embed.author.name and not embed.description:
                 continue
+            author = flatten_newlines(embed.author.name)
+            title = flatten_newlines(embed.title)
+            fields_titles = [flatten_newlines(field.name) for field in embed.fields]
+            fields_values = [flatten_newlines(field.value) for field in embed.fields]
+            description = flatten_newlines(embed.description)
+
             compiled_message += (f"\n{Fore.YELLOW}↳[EMBED]"
-                                 f"\n   ↳Author        {str(embed.author.name).replace("\n", "    ")}"
-                                 f"\n   ↳Title         {str(embed.title).replace("\n", "    ")}"
-                                 f"\n   ↳Fields titles {[str(field.name).replace("\n", "    ") for field in embed.fields]}"
-                                 f"\n   ↳Fields values {[str(field.value).replace("\n", "    ") for field in embed.fields]}"
-                                 f"\n   ↳Description   {str(embed.description).replace("\n", "    ")}")
+                                 f"\n   ↳Author        {author}"
+                                 f"\n   ↳Title         {title}"
+                                 f"\n   ↳Fields titles {fields_titles}"
+                                 f"\n   ↳Fields values {fields_values}"
+                                 f"\n   ↳Description   {description}")
     if message.reactions:
         compiled_message += f"\n{Fore.YELLOW}↳reactions: "
         for reaction in message.reactions:
@@ -167,71 +180,3 @@ class SelectUtils:
             return channels[await async_int_input("Enter the channel index:", stop_if_error)]
         except:
             warn("You entered an invalid index")
-
-class GuildMute:
-    def __init__(self, id):
-        self.id = id
-
-class ChannelMute:
-    def __init__(self, id):
-        self.id = id
-
-class MutePare:
-    def __init__(self, guilds_list, channels_list):
-        self.guilds = guilds_list
-        self.channels = channels_list
-
-class MuteUtils:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def _read_mutes():
-        if not os.path.exists("mutes") or os.path.getsize("mutes") <= 0:
-            return []
-        with open("mutes", 'rb') as f:
-            mutes: list = pickle.loads(f.read())
-        if not mutes:
-            return []
-        return mutes
-
-    @staticmethod
-    def add_mute(mute_object):
-        mutes = MuteUtils._read_mutes()
-        mutes.append(mute_object)
-        with open("mutes", 'wb') as f:
-            f.write(pickle.dumps(mutes))
-
-    @staticmethod
-    def remove_mute(mute_object):
-        try:
-            mutes = MuteUtils._read_mutes()
-            mutes.remove(mute_object)
-        except:
-            return
-        with open("mutes", 'wb') as f:
-            f.write(pickle.dumps(mutes))
-
-    @staticmethod
-    def remove_mute_by_id(id):
-        try:
-            mutes = MuteUtils._read_mutes()
-            for mute in mutes:
-                if mute.id == id:
-                    mutes.remove(mute)
-        except:
-            return
-        with open("mutes", 'wb') as f:
-            f.write(pickle.dumps(mutes))
-
-    @staticmethod
-    def get_mutes():
-        mutes = MuteUtils._read_mutes()
-        guild_mutes = []
-        channel_mutes = []
-        for mute in mutes:
-            if isinstance(mute, ChannelMute):
-                channel_mutes.append(mute)
-            if isinstance(mute, GuildMute):
-                guild_mutes.append(mute)
-        return MutePare(guild_mutes, channel_mutes)
