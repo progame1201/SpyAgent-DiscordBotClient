@@ -1,39 +1,39 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/progame1201/SpyAgent-DiscordBot/total)
 
 # SpyAgent-DiscordBotClient description
-SpyAgent is a console application written in Python that is a client for the Discord bot.<br>
-the program is designed for Windows<br>
-I recommend using Windows Terminal: https://www.microsoft.com/store/productId/9N0DX20HK701?ocid=pdpshare
+SpyAgent is a console application written in Python that acts as a client for a Discord bot.<br>
+The program is designed for Windows, but it can also run on Linux; however, I do not guarantee that it will work correctly there.<br>
+If you're using Windows 10, I would like to recommend Windows Terminal: https://www.microsoft.com/store/productId/9N0DX20HK701?ocid=pdpshare
+
 # How to use it?
-To use this program, you need python, preferably version 3.13 or lower<br>
-To install all the necessary modules download requirements.txt and enter the <br>`pip install -r  path/to/requirements.txt`<br>command in the console<br>
-you have to go to the website: https://discord.com/developers/applications then create your own discord bot <br>
-Next, turn on the switches under the Privileged Gateway Intents category located in the bot settings.
+To use this program, you need Python, preferably version 3.13 or lower.<br>
+To install all the necessary modules, download `requirements.txt` and run the command `pip install -r path/to/requirements.txt` in the console.<br>
+Go to the website: https://discord.com/developers/applications, then create your own Discord bot.<br>
+Next, enable the switches under the **Privileged Gateway Intents** category located in the bot settings.<br>
 ![screenshot](https://i.ibb.co/N2tdQBj/13213113.png)<br><br>
 Next, generate your link and invite your bot to your server.<br>
-Next, you need to get your bot's token and insert it into the config.<br>
-Then select the server and channel and you can now use it.<br>
-to find out all the commands and their functionality, you can type ***help<br>
-<br>
+Then, get your bot's token and insert it into the config.<br>
+After that, select the server and channel — you can now use the client.<br>
+To see all commands and their functionality, type `***help`.
 
 # Command list
-*(only in SpyAgent 2.x.x) You can open a window for entering commands by pressing F12 (default)* or by typing as a message. Example: ***help<br>
-__All commands work with the prefix `***`__ *(by default)*<br>
+*(only in SpyAgent 2.x.x) You can open a command input window by pressing F12 (default).*<br>
+Use the prefix `***` before commands (default, can be changed in the config). Example: `***help`.<br>
 
-+ help - help.
++ help - display help.
 + reset - change the channel and guild<br>
-+ file `<message>` - send file with message<br>
-+ mute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - select a channel or guild for mute<br>
-+ unmute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - remove the channel or guild from mute <br>
-+ reaction `<mode: 1 - choose the emoji yourself; 2 - Select an emoji from the list of all emojis>` - Put a reaction under the message<br>
-+ history `<channel id>` - Get the history of the channel you are on. Or from channel by id.<br>
++ file `<message>` - send a file with a message<br>
++ mute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - select a channel or guild to mute<br>
++ unmute <guild aliases:`["g", "2", "guild"]`; channel aliases: `["ch", "c", "1", "channel"]`> - remove the channel or guild from mute<br>
++ reaction `<mode: 1 - utf-8 emoji; 2 - select an emoji from the list of all emojis>` - add a reaction to a message<br>
++ history `<channel id>` - get the history of the current channel or a channel by ID<br>
 + delete - delete a message<br>
-+ edit `<message>` - Edit the message<br>
-+ set `<channel id>` - set the channel by id.<br>
++ edit `<message>` - edit a message<br>
++ set `<channel id>` - set the channel by ID<br>
 + reply `<message>` - reply to a message<br>
 + vcplay - choose and play any file<br>
-+ vcstop - stop playing file<br>
-+ vcconnect - connect to voice channel<br>
-+ vcdisconnect - disconnect from voice channel
-+ ~~vctts - use tts in voice chat<br>~~
-+ guildleave - choose a guild to exit it<br>
++ vcstop - stop playing a file<br>
++ vcconnect - connect to a voice channel<br>
++ vcdisconnect - disconnect from a voice channel<br>
++ ~~vctts - use TTS in voice chat<br>~~
++ guildleave - choose a guild to leave<br>

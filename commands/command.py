@@ -1,4 +1,4 @@
-from disnake import *
+from disnake import Client, Guild, TextChannel
 
 
 class Command:

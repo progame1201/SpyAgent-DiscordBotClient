@@ -2,14 +2,14 @@ import os
 from io import BytesIO
 
 import pytz
-from disnake import *
 from PIL import Image
 from colorama import Fore
 from aioconsole import ainput
 from term_image.image import AutoImage
+from disnake import Client, DMChannel, Forbidden, Guild, Message, NotFound, TextChannel, VoiceChannel
 
 from log import log, error, user_message, warn
-import conifg
+import config
 
 
 def is_valid_index(index, obj_list):
@@ -53,7 +53,7 @@ async def prepare_message(message: Message, only_write_messages_from_selected_ch
     else:
         content = message.content
 
-    created_at = message.created_at.astimezone(pytz.timezone(conifg.TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S")
+    created_at = message.created_at.astimezone(pytz.timezone(config.TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S")
     compiled_message = f"({created_at}) "
 
     if not only_write_messages_from_selected_channel:
@@ -118,7 +118,7 @@ async def show_history(channel, draw_images=False):
 
 async def draw_message_attachments(message):
     for attachment in message.attachments:
-        if conifg.DRAW_IMAGES and os.path.splitext(attachment.filename)[1].lower().lower() in [".png", ".jpg", ".jpeg"]:
+        if config.DRAW_IMAGES and os.path.splitext(attachment.filename)[1].lower() in [".png", ".jpg", ".jpeg"]:
             img = Image.open(BytesIO(await attachment.read()))
             img = AutoImage(img, height=8)
             img.draw(h_align="left", v_align="top", pad_height=-100, animate=False)
@@ -148,10 +148,12 @@ class SelectUtils:
 
     @staticmethod
     async def select_channel(guild: Guild, stop_if_error=False, to_skip=None,
-                             show_threads=True, channel_type="text") -> TextChannel | None:
+                             show_threads=True, channel_type="text") -> TextChannel | VoiceChannel | None:
         if to_skip is None:
             to_skip = []
-
+        if not isinstance(guild, Guild):
+            warn("guild is not Guild")
+            return
 
         match channel_type:
             case "text":
@@ -166,17 +168,19 @@ class SelectUtils:
             log(f"Guild doesn't have any {channel_type} channels.")
             return
 
+
         log("Please, select channel from this list:")
         for i, channel in enumerate(channels):
             log(f"{i} - {channel.name} (id: {channel.id})")
             try:
-                if channel.threads and show_threads:
-                    log("↳Channel threads:")
-                    for thread in channel.threads[:4]:
-                        log(f"  ↳{thread.name} (id: {thread.id})")
+                if isinstance(channel, TextChannel):
+                    if channel.threads and show_threads:
+                        log("↳Channel threads:")
+                        for thread in channel.threads[:4]:
+                            log(f"  ↳{thread.name} (id: {thread.id})")
             except Exception as ex:
                 print(ex)
         try:
             return channels[await async_int_input("Enter the channel index:", stop_if_error)]
         except:
-            warn("You entered an invalid index")
+            return

@@ -1,5 +1,7 @@
-from colorama import Fore, init
+import inspect
 from datetime import datetime
+
+from colorama import Fore, init
 
 init(autoreset=True)
 
@@ -26,9 +28,10 @@ def event(string, end="\n", show_time=True):
 def warn(string, end="\n", show_time=True):
     text = f"{Fore.YELLOW}"
     if show_time:
-        print(f"[{datetime.now()}]", end=end)
-        return
-    text += f"[WARN] {string}"
+        text += f"[{datetime.now()}]"
+
+    caller = inspect.stack()[1]
+    text += f"{caller.lineno}:{caller.function} [WARN] {string}"
 
     print(text, end=end)
 
@@ -36,7 +39,8 @@ def error(string, end="\n", show_time=True):
     text = f"{Fore.RED}"
     if show_time:
         text += f"[{datetime.now()}]"
-        return
-    text += f"[ERROR] {string}"
+
+    caller = inspect.stack()[1]
+    text += f"{caller.lineno}:{caller.function} [ERROR] {string}"
 
     print(text, end=end)
