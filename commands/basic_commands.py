@@ -38,8 +38,6 @@ class Delete(Command):
         await message.delete()
         log("deleted.")
 
-
-
 class Edit(Command):
     def __init__(self, *args):
         super().__init__(*args)
@@ -62,7 +60,6 @@ class Edit(Command):
         message: Message = history[index]
         await message.edit(content=" ".join(args[0]))
         log("edited.")
-
 
 class File(Command):
     def __init__(self, *args):
@@ -88,7 +85,6 @@ class History(Command):
             channel = self.channel
         await show_history(channel)
 
-
 class Reply(Command):
     def __init__(self, *args):
         super().__init__(*args)
@@ -107,7 +103,6 @@ class Reply(Command):
         message = history[index]
 
         await message.reply(" ".join(args[0]))
-
 
 class Reaction(Command):
     def __init__(self, *args):

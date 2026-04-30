@@ -1,5 +1,5 @@
 from .command import Command
-from .commandoutput import CommandOutput
+from .command_output import CommandOutput
 from .basic_commands import Delete, Edit, File, History, Reply, Reaction
 from .channel_management_commands import (
     ResetOutput,

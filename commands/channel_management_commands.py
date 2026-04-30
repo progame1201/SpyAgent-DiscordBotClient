@@ -3,7 +3,7 @@ from aioconsole import ainput
 from colorama import Fore
 
 from .command import Command
-from .commandoutput import CommandOutput
+from .command_output import CommandOutput
 from utils import show_history, SelectUtils
 from mutes import MuteUtils, ChannelMute, GuildMute
 from log import log

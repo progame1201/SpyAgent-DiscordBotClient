@@ -3,7 +3,7 @@ from disnake import VoiceClient, FFmpegPCMAudio
 from tkinter.filedialog import askopenfilename
 
 from .command import Command
-from .commandoutput import CommandOutput
+from .command_output import CommandOutput
 from utils import SelectUtils, async_int_input, is_valid_index
 import log as log_module
 from log import log
