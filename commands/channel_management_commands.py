@@ -7,6 +7,7 @@ from .command_output import CommandOutput
 from utils import show_history, SelectUtils
 from mutes import MuteUtils, ChannelMute, GuildMute
 from log import log
+import config
 
 
 class MuteOutput(CommandOutput):
@@ -113,7 +114,8 @@ class Reset(Command):
         channel = await self.select_utils.select_channel(guild, stop_if_error=True)
         if channel is None:
             log("You entered incorrect channel index. the command will not continue execution.")
-        await show_history(channel)
+            return
+        await show_history(channel, draw_images=config.DRAW_IMAGES)
         return ResetOutput(guild, channel)
 
 class SetOutput(CommandOutput):
@@ -133,7 +135,7 @@ class Set(Command):
         except:
             log("You entered incorrect channel index. the command will not continue execution.")
             return
-        await show_history(channel)
+        await show_history(channel, draw_images=config.DRAW_IMAGES)
         return SetOutput(channel)
 
 class GuildLeaveOutput(CommandOutput):
@@ -157,8 +159,24 @@ class GuildLeave(Command):
         log(f"{Fore.WHITE}Are you sure about this? You will not be able to return to the guild on your own")
         log(f"{Fore.WHITE}Write the name of the guild to leave it ({guild.name})")
         name = await ainput("name: ")
-        if name == guild.name:
-            await guild.leave()
-        else:
+        if name != guild.name:
             log(f"{Fore.WHITE}You entered name incorrect")
             return
+
+        await guild.leave()
+        log(f"{Fore.WHITE}Left the guild {guild.name}")
+
+        if self.guild is None or guild.id != self.guild.id:
+            return
+
+        log(f"{Fore.WHITE}The current guild was left. Please select a new guild and channel.")
+        new_guild = await self.select_utils.select_guild(stop_if_error=True)
+        if new_guild is None:
+            log("You entered incorrect guild index. the command will not continue execution.")
+            return
+        new_channel = await self.select_utils.select_channel(new_guild, stop_if_error=True)
+        if new_channel is None:
+            log("You entered incorrect channel index. the command will not continue execution.")
+            return
+        await show_history(new_channel, draw_images=config.DRAW_IMAGES)
+        return GuildLeaveOutput(new_guild, new_channel)

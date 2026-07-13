@@ -20,7 +20,7 @@ from mutes import GuildMute, ChannelMute, MuteUtils
 from utils import SelectUtils, prepare_message, show_history, cut_text, draw_message_attachments
 
 
-log("SpyAgent-DiscordBotClient 3.4.3, 2026, progame1201")
+log("SpyAgent-DiscordBotClient 3.5.0, 2026, progame1201")
 client = Client(intents=Intents.all())
 
 mutes = MuteUtils.get_mutes()
@@ -79,7 +79,7 @@ async def on_message(message: Message):
         if config.DRAW_IMAGES:
             await draw_message_attachments(message)
     except Exception as ex:
-        error(f"{message.author.name}:{message.channel}:{message.id}{ex}")
+        error(f"{message.author.name}:{message.channel}:{message.id}: {ex}")
 
 @client.event
 async def on_reaction_add(reaction, user):
@@ -173,7 +173,7 @@ async def message_sender():
             if channel is None:
                 continue
             continue
-        if message.lower().startswith(config.COMMAND_PREFIX):
+        if message.lower().startswith(config.COMMAND_PREFIX.lower()):
             message = message[len(config.COMMAND_PREFIX):]
             if message.lower() == "help":
                 print()
@@ -189,10 +189,8 @@ async def message_sender():
                     continue
                 output = None
                 try:
-                    args = message.split(" ")
-                    if len(args) > 1:
-                        args = args[1:]
-                        
+                    args = message.split(" ")[1:]
+
                     if command.name == "mute" or command.name == "unmute":  # I tried to use isinstance, but it froze. Idk what the problem is.
                         command.channel_mutes = channel_mutes
                         command.guild_mutes = guild_mutes

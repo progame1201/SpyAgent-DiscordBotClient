@@ -6,9 +6,21 @@ class GuildMute:
     def __init__(self, id):
         self.id = id
 
+    def __eq__(self, other):
+        return isinstance(other, GuildMute) and self.id == other.id
+
+    def __hash__(self):
+        return hash((GuildMute, self.id))
+
 class ChannelMute:
     def __init__(self, id):
         self.id = id
+
+    def __eq__(self, other):
+        return isinstance(other, ChannelMute) and self.id == other.id
+
+    def __hash__(self):
+        return hash((ChannelMute, self.id))
 
 class MutePare:
     def __init__(self, guilds_list, channels_list):
@@ -50,9 +62,7 @@ class MuteUtils:
     def remove_mute_by_id(id):
         try:
             mutes = MuteUtils._read_mutes()
-            for mute in mutes:
-                if mute.id == id:
-                    mutes.remove(mute)
+            mutes = [m for m in mutes if m.id != id]
         except:
             return
         with open("mutes", 'wb') as f:

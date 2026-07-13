@@ -17,6 +17,7 @@ from utils import (
     SelectUtils,
 )
 from log import log
+import config
 
 
 class Delete(Command):
@@ -83,7 +84,7 @@ class History(Command):
             channel = await self.client.fetch_channel(int(args[0][0]))
         else:
             channel = self.channel
-        await show_history(channel)
+        await show_history(channel, draw_images=config.DRAW_IMAGES)
 
 class Reply(Command):
     def __init__(self, *args):

@@ -115,5 +115,4 @@ class VcStop(Command):
 
         if vc_client.is_playing():
             vc_client.stop()
-        vc_client.stop()
         log("Stopped playing")

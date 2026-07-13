@@ -15,13 +15,13 @@ def log(string, end="\n", show_time=False):
     print(text, end=end)
 
 def user_message(string, end="\n"):
-    print(f"{Fore.WHITE}{string}", end=end)
+    print(f"[MESSAGE] {Fore.WHITE}{string}", end=end)
 
 def event(string, end="\n", show_time=True):
     text = f"{Fore.LIGHTCYAN_EX}"
     if show_time:
-        text += f"[{datetime.now()}]"
-    text += f"[EVENT] {string}"
+        text += f"({datetime.now()})"
+    text += f" [EVENT] {string}"
 
     print(text, end=end)
 

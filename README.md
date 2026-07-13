@@ -16,6 +16,9 @@ Then, get your bot's token and insert it into the config.<br>
 After that, select the server and channel — you can now use the client.<br>
 To see all commands and their functionality, type `***help`.
 
+# Configuration
+Copy `config.example.py`, rename it to `config.py` and fill in your bot token.
+
 # Command list
 *(only in SpyAgent 2.x.x) You can open a command input window by pressing F12 (default).*<br>
 Use the prefix `***` before commands (default, can be changed in the config). Example: `***help`.<br>
